@@ -1,0 +1,8 @@
+great_trochant 6310
+lat_bot_con 16450
+lat_con_post 20116
+LEC_VERTEX 21454
+lat_great_trochant 4636
+med_bot_con 2890
+med_con_post 30466
+MEC_VERTEX 3667
