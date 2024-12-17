@@ -2,7 +2,7 @@ from PelvisModel import PelvisModel as PelvisModel
 from FemurModel import FemurModel as FemurModel
 from TibiaFibulaModel import TibiaFibulaModel as TibiaFibulaModel
 from PatellaModel import PatellaModel as PatellaModel
-from gias3.common import transform3D, math, geoprimitives
+from gias3.common import transform3D, math
 import numpy as np
 from scipy.spatial import cKDTree
 
@@ -35,13 +35,19 @@ class LowerLimbSide:
         self.allow_knee_adduction_correction = general_fit_settings['allow_knee_adduction_correction']
         self.loo = general_fit_settings['LOO']
 
+    def import_opposite_side(self, ll):
+    # function to associate two lower limb models with eachother in the case of using both sides
+    # used to keep consistent coordinate systems mainly in the pelvis
+        if self.side == 'left':
+            self.ll_r = ll
+        else:
+            self.ll_l = ll
+
     def load_bones_and_model(self):
         # Load bone models and set to neutral positions
         # zero shape model
-        if self.loo:
-            self.ssm_handler.load_coupled_ssm_loo
-        else:
-            self.ssm_handler.load_coupled_ssm()
+
+        self.ssm_handler.load_coupled_ssm()
         self.ssm_handler.reconstruct_ssm([0, ], [0, ])
         self.ssm_handler.split_ssm_geometry_per_bone(self.ssm_handler.reconstructed)
 
@@ -122,21 +128,24 @@ class LowerLimbSide:
         pelvis_rigid [list]: list of 6 floats describing a rigid transformation in the global coordinate system of the
             pelvis - [tx, ty, tz, rx, ry, rz]. Rotation is about the origin of the pelvis anatomic coordinate system.
         """
-        _pel = self.pelvis_model
-        _pel_origin = self.pelvis_model.acs.o
-        _pel.node_coords = transform3D.transformRigid3DAboutP(_pel.node_coords, pelvis_rigid, _pel_origin)
-        #_pel.node_coords_pel_l = transform3D.transformRigid3DAboutP(_pel.node_coords_pel_l, pelvis_rigid, _pel_origin)
-        #_pel.node_coords_pel_r = transform3D.transformRigid3DAboutP(_pel.node_coords_pel_r, pelvis_rigid, _pel_origin)
-        #_pel.node_coords_sac = transform3D.transformRigid3DAboutP(_pel.node_coords_sac, pelvis_rigid, _pel_origin)
 
-        self.pelvis_model.update_landmarks_and_regions()
-        self.pelvis_model.update_acs()
+        pel = self.pelvis_model
+        _pel_origin = self.pelvis_model.acs.o
+
+        pel.node_coords_pel_l = transform3D.transformRigid3DAboutP(pel.node_coords_pel_l, pelvis_rigid, _pel_origin)
+        pel.node_coords_pel_r = transform3D.transformRigid3DAboutP(pel.node_coords_pel_r, pelvis_rigid, _pel_origin)
+        pel.node_coords = np.vstack((pel.node_coords_pel_l, pel.node_coords_pel_r))
+
+        pel.update_landmarks_and_regions()
+
+        pel.update_acs()
 
     def update_femur(self, hip_rot):
         """Update position and orientation of the femur segment.
         inputs:
         hip_rot [list]: list of 3 floats describing hip flexion, rotation, and adduction in radians.
         """
+
         # align femur to neutral hip CS
         self.reset_femur_hip()
 
@@ -150,24 +159,28 @@ class LowerLimbSide:
                                                                             ['hip_flex_coeff'] * hip_rot[0],
                                                                             o,
                                                                             o + flex)
+
         self.femur_model.update_landmarks_and_regions()
         self.femur_model.update_acs()
 
         # abduction (floating)
         self.femur_model.node_coords = transform3D.transformRotateAboutAxis(self.femur_model.node_coords,
                                                                             self.direction_parameters[self.side]
-                                                                            ['hip_add_coeff'] * hip_rot[2],
+                                                                        ['hip_add_coeff'] * hip_rot[2],
                                                                             o,
                                                                             o + abd)
+
         self.femur_model.update_landmarks_and_regions()
         self.femur_model.update_acs()
 
         # rotations (femur-z)
+
         self.femur_model.node_coords = transform3D.transformRotateAboutAxis(self.femur_model.node_coords,
                                                                             self.direction_parameters[self.side]
-                                                                            ['hip_rot_coeff'] * hip_rot[1],
+                                                                        ['hip_rot_coeff'] * hip_rot[1],
                                                                             o,
                                                                             o + rot)
+
         self.femur_model.update_landmarks_and_regions()
         self.femur_model.update_acs()
 
@@ -188,6 +201,7 @@ class LowerLimbSide:
                               of + self.femur_model.acs.y,
                               of + self.femur_model.acs.z])
         t = transform3D.directAffine(cs_source, cs_targ)
+
         self.femur_model.node_coords = transform3D.transformAffine(self.femur_model.node_coords, t)
         self.femur_model.update_landmarks_and_regions()
         self.femur_model.update_acs()
@@ -204,7 +218,6 @@ class LowerLimbSide:
         inputs:
         knee_rot [list of floats]: knee flexion and adduction angle in radians.
         """
-
         # align tibia to neutral knee CS
         self.reset_tibia_knee()
 
@@ -260,6 +273,7 @@ class LowerLimbSide:
                               ])
 
         t = transform3D.directAffine(cs_source, cs_targ)
+
         self.tibfib_model.node_coords = transform3D.transformAffine(self.tibfib_model.node_coords, t)
         self.tibfib_model.update_landmarks_and_regions()
         self.tibfib_model.update_acs()
@@ -296,6 +310,7 @@ class LowerLimbSide:
                                                                              -varus_angle,
                                                                              self.femur_model.acs.o,
                                                                              self.femur_model.acs.o + floating_x)
+
         self.tibfib_model.update_landmarks_and_regions()
         self.tibfib_model.update_acs()
 
@@ -331,16 +346,32 @@ class LowerLimbSide:
         tp_lat = self.tibfib_model.landmark_coords[self.side]['tib_plateau_lat']
         tp_med = self.tibfib_model.landmark_coords[self.side]['tib_plateau_med']
 
+
         # tibial plateau vector
-        tp_v = tp_med - tp_lat
+        if self.side == 'left':
+            tp_v = tp_med - tp_lat
+        elif self.side == 'right':
+            tp_v = tp_lat - tp_med
         # find the closest femur condyle points to tp_lat and tp_med
         (med_d, lat_d), (fc_med_i, fc_lat_i) = femur_points_tree.query([tp_med, tp_lat])
 
-        if fc_med_i == fc_lat_i:  # To make sure fc_v is not NaN
-            fc_med_i -= 1
+        #if fc_med_i == fc_lat_i:  # To make sure fc_v is not NaN
+       #     fc_med_i -= 1
 
         # femoral condyle vector
-        fc_v = femur_points_tree.data[fc_med_i] - femur_points_tree.data[fc_lat_i]
+        #if self.side == 'left':
+        #    fc_v = femur_points_tree.data[fc_med_i] - femur_points_tree.data[fc_lat_i]
+        #elif self.side == 'right':
+        #    fc_v = femur_points_tree.data[fc_lat_i] - femur_points_tree.data[fc_med_i]
+
+        fc_med_i = self.femur_model.landmark_coords[self.side]['med_bot_con']
+        fc_lat_i = self.femur_model.landmark_coords[self.side]['lat_bot_con']
+
+        if self.side == 'left':
+            fc_v = fc_med_i - fc_lat_i
+        elif self.side == 'right':
+            fc_v = fc_lat_i - fc_med_i
+
         # project vectors to Z-Y plane
         z = self.femur_model.acs.z
         y = self.tibfib_model.acs.y
@@ -351,8 +382,15 @@ class LowerLimbSide:
         tp_fc_angle = abs(math.angle(tp_v_zy, fc_v_zy))
 
         # if lat condyle is higher than med condyle, negative rotation is needed
-        if lat_d > med_d:
-            tp_fc_angle *= -1.0
+        lat_d = np.sqrt(np.sum((tp_lat-fc_lat_i)**2, axis=0))
+        med_d = np.sqrt(np.sum((tp_med - fc_med_i) ** 2, axis=0))
+
+        if self.side == 'left':
+            if lat_d > med_d:
+                tp_fc_angle *= -1.0
+        else:
+            if lat_d < med_d:
+                tp_fc_angle *= -1.0
 
         return tp_fc_angle, (lat_d, med_d)
 

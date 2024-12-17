@@ -1,6 +1,6 @@
 from gias3.musculoskeletal.bonemodels.modelcore import ACSCartesian
 from gias3.musculoskeletal import model_alignment
-from gias3.common import transform3D, math, geoprimitives
+from gias3.common import geoprimitives
 import numpy as np
 
 
@@ -16,23 +16,25 @@ class FemurModel:
 
         self.landmark_node_nrs = ssm_handler.ssm_lm_node_nrs_femur
         self.node_coords = None
+        #self.node_coords_fem_l = None
+        #self.node_coords_fem_r = None
         self.landmark_coords = dict(left={}, right={})
         self.region_coords = dict(left={}, right={})
-        self.femoral_head_centre = None
+        self.femoral_head_centre = ()
 
     def update_node_coords(self):
         node_coords_per_bone = self.ssm_handler.reconstructed_nodes_per_bone
         self.node_coords = node_coords_per_bone[self.bone_names[self.side]]
 
     def update_landmarks_and_regions(self):
+
         for landmark_name in self.landmark_names[self.side]:
             self.landmark_coords[self.side].update({
-                landmark_name: self.node_coords[self.landmark_node_nrs[self.side][landmark_name],:]})
-        self.femoral_head_centre = self.obtain_femoral_head_centre()
-
+                landmark_name: self.node_coords[self.landmark_node_nrs[self.side][landmark_name], :]})
         self.region_coords[self.side]['knee_nodes'] = []
         for node_nr in self.ssm_handler.ssm_regions_node_nrs_femur[self.side]['knee_nodes']:
             self.region_coords[self.side]['knee_nodes'].append(self.node_coords[node_nr, :])
+        self.femoral_head_centre = self.obtain_femoral_head_centre()
 
     def obtain_femoral_head_centre(self):
         femoral_head_coords = []

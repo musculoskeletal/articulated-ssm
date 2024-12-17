@@ -17,13 +17,17 @@ class TibiaFibulaModel:
         self.landmark_coords = dict(left={}, right={})
         self.region_coords = dict(left={}, right={})
 
-        self.node_coords_tib = None
-        self.node_coords_fib = None
+        #self.node_coords_tib = None
+        #self.node_coords_fib = None
         self.node_coords = None
+        #self.node_coords_tib_l = None
+        #self.node_coords_tib_r = None
 
     def update_node_coords(self):
         node_coords_per_bone = self.ssm_handler.reconstructed_nodes_per_bone
         self.node_coords = node_coords_per_bone[self.bone_names[self.side]]
+
+        #self.node_coords = node_coords_per_bone[self.bone_names[self.side]]
         #self.node_coords_tib = node_coords_per_bone[self.bone_names[self.side][0]]
         #self.node_coords_fib = node_coords_per_bone[self.bone_names[self.side][1]]
         #self.node_coords = np.vstack((self.node_coords_tib, self.node_coords_fib))
@@ -31,16 +35,16 @@ class TibiaFibulaModel:
     def update_landmarks_and_regions(self):
         for landmark_name in self.landmark_names[self.side]:
             self.landmark_coords[self.side].update({
-                landmark_name: self.node_coords[self.landmark_node_nrs[self.side][landmark_name],:]})
+                landmark_name: self.node_coords[self.landmark_node_nrs[self.side][landmark_name], :]})
 
         self.region_coords[self.side]['knee_nodes'] = []
         for node_nr in self.ssm_handler.ssm_regions_node_nrs_tibiafibula[self.side]['knee_nodes']:
             self.region_coords[self.side]['knee_nodes'].append(self.node_coords[node_nr, :])
 
     def update_acs(self):
-        self.acs.update(*model_alignment.createTibiaFibulaACSISB(self.landmark_coords[self.side]['malleolus_med'],
-                                                                 self.landmark_coords[self.side]['malleolus_lat'],
-                                                                 self.landmark_coords[self.side]['condyle_med'],
-                                                                 self.landmark_coords[self.side]['condyle_lat'],
-                                                                 side=self.side))
+        self.acs.update(*model_alignment.createTibiaFibulaACSISB_2(self.landmark_coords[self.side]['malleolus_med'],
+                                                             self.landmark_coords[self.side]['malleolus_lat'],
+                                                             self.landmark_coords[self.side]['condyle_med'],
+                                                             self.landmark_coords[self.side]['condyle_lat'],
+                                                             side=self.side))
 

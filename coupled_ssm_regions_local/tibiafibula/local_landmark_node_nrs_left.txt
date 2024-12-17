@@ -1,8 +1,8 @@
-PLC 40318
-PMC 23656
-condyle_lat 18908
-malleolus_lat 11296
-condyle_med 26659
-malleolus_med 16181
-tib_plateau_lat 22502
-tib_plateau_med 23105
+condyle_lat 3397
+condyle_med 3851
+malleolus_lat_bot 420
+malleolus_med_bot 2079
+tib_plateau_lat 3999
+tib_plateau_med 4094 
+malleolus_lat 2044
+malleolus_med 2935

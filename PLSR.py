@@ -24,6 +24,8 @@ def plsr(case_data, anthro_data, general_fit_settings):
     If gender is included, this must be in the second column and all other factors
     must be numbers.
 
+    author: Laura Carman
+
     '''
     print("--starting PLSR")
     np.set_printoptions(threshold=np.inf)
