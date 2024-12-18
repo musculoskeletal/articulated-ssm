@@ -1,7 +1,6 @@
 # Main articulated SSM model fitting script
 # 25/01/2023
 
-import SSMHandler
 from LowerLimb import LowerLimb as LowerLimb
 import numpy as np
 import os
@@ -10,7 +9,6 @@ import SegmentationHandler
 import FitASM_2 as FitASM
 import time
 import PLSR
-import opensim_model_generator
 
 startTime = time.time()
 general_fit_settings = {'segm_fit': False,                           # Fit using segmentation data

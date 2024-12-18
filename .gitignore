@@ -4,12 +4,6 @@ __pycache__/
 
 # SSM
 coupled_ssm/
-osim_models/
 code_single_side_hemi/
-
-# python files
-osim_model_generator.py
-osim_scale.py
-openism.log
 
 
