@@ -1,5 +1,4 @@
 import LowerLimbSide
-import LowerLimbBothSide
 import SSMHandler
 
 class LowerLimb:

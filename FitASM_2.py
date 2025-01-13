@@ -187,7 +187,7 @@ class FitASM:
                 opt_target_lms_list, opt_source_lms_list = \
                     self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
             SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit, self.case,
-                                       self.pred_path, self.side)
+                                       self.pred_path, self.side, xopt1_split)
             PlotFunctions.plot_all_bones_with_source_and_target_lms(self.ll_model, opt_source_lms_list,
                                                                     opt_target_lms_list, self.side)
             opt_landmark_dist = \
