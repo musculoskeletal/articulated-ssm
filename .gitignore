@@ -8,3 +8,10 @@ code_single_side_hemi/
 
 # Project files
 .idea/
+
+# Distribution
+build/
+dist/
+package/
+*.egg-info/
+*.egg
