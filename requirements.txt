@@ -9,4 +9,3 @@ gias3.learning
 gias3.mesh
 gias3.musculoskeletal
 gias3.registration
-gias3.visualisation

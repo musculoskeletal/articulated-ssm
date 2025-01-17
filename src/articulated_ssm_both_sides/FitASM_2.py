@@ -3,7 +3,6 @@ from gias3.registration import alignment_fitting
 from gias3.common import transform3D
 from numpy.linalg import inv
 from scipy import optimize
-import PlotFunctions
 import matplotlib.pyplot as plt
 
 import SaveMesh
@@ -118,8 +117,6 @@ class FitASM:
                 if self.side == 'right':
                     self.fit_data['landmark_handler_r'].update_source_landmarks_dict()
                     target_lms_list, source_lms_list = self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
-                #PlotFunctions.plot_all_bones_with_source_and_target_lms(self.ll_model, source_lms_list,
-                 #                                                       target_lms_list)
                 # calc sum of squared distance between target and source landmarks
                 ssdist = ((((np.asarray(target_lms_list) - np.asarray(source_lms_list)))) ** 2.0).sum()  # in mm
                 # print('ssdist = {}mm'.format(ssdist))
@@ -188,8 +185,6 @@ class FitASM:
                     self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
             SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit, self.case,
                                        self.pred_path, self.side, xopt1_split)
-            PlotFunctions.plot_all_bones_with_source_and_target_lms(self.ll_model, opt_source_lms_list,
-                                                                    opt_target_lms_list, self.side)
             opt_landmark_dist = \
                 np.linalg.norm((np.asarray(opt_target_lms_list) - np.asarray(opt_source_lms_list)), axis=1)
             opt_ssdist = ((opt_landmark_dist) ** 2).sum()
@@ -211,7 +206,6 @@ class FitASM:
             print('opt_dist_error = {}'.format(dist_errors[opt_index]))
             print('opt_maha_error = {}'.format(maha_errors[opt_index]))
             print('opt_total_error = {}'.format(total_errors[opt_index]))
-            PlotFunctions.plot_all_bones_with_segmentations(self.ll_model, self.segmentations)
 
         # plot errors during minimisation
         plot = False
