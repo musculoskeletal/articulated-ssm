@@ -3,7 +3,6 @@ from gias3.registration import alignment_fitting
 from gias3.common import transform3D
 from numpy.linalg import inv
 from scipy import optimize
-import matplotlib.pyplot as plt
 
 import SaveMesh
 
@@ -206,18 +205,6 @@ class FitASM:
             print('opt_dist_error = {}'.format(dist_errors[opt_index]))
             print('opt_maha_error = {}'.format(maha_errors[opt_index]))
             print('opt_total_error = {}'.format(total_errors[opt_index]))
-
-        # plot errors during minimisation
-        plot = False
-        if plot == True:
-            plt.plot(dist_errors, 'r-', label='sum of squared distance')
-            plt.plot(maha_errors, 'b-', label='sum of squared Mahalanobis distance')
-            plt.plot(total_errors, 'g-', label='total error')
-            plt.legend()
-            plt.title('fit errors')
-            plt.ylabel('squared distance')
-            plt.xlabel('iteration #')
-            plt.show()
 
         return x_hist_it
 
