@@ -5,7 +5,6 @@
 
 # All node numbers are local node numbers (node numbers per bone, not the whole coupled SSM).
 
-#import PCA_ASM as PCA
 from gias3.learning import PCA
 from gias3.mesh import vtktools
 from gias3.mesh import simplemesh
