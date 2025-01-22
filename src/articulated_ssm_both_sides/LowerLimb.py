@@ -3,7 +3,6 @@ import SSMHandler
 
 class LowerLimb:
     def __init__(self, general_fit_settings):
-        self.name = general_fit_settings['name']
         self.include_patella = general_fit_settings['include_patella']
         #self.ssm_handler = ssm_handler
 

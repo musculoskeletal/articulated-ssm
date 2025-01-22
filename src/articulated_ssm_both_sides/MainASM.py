@@ -19,12 +19,10 @@ general_fit_settings = {'segm_fit': False,                           # Fit using
                         'mweight': [1,0.0001], #[1, 0.01],                        # Mahalanobis weight (multi fit: [float, float])
                         'min_args': {'method': 'Powell'},#{'method': 'BFGS','jac': False,'bounds': None, 'tol': 1e-6,'options': {'eps': 1e-5}},
                                     #{'method': 'Powell'},           # scipy.optimize minimisation algorithm
-                        'name': 'test_fit',
                         'knee_gap': 5,                               # Minimal gap between femur and tibia knee nodes
                         'knee_fixed': False,                          # Fix the knee in initial position (0)
                         'allow_knee_adduction_dof': True,            # Allow rotation in VV when placing tibia-fibula
                         'allow_knee_adduction_correction': True,     # Allow VV rotation to obtain minimal knee gap
-                        'ssm_name': 'shape_model',
                         'pred_path': 'RCH05',
                         'x0': None,                                  # Initial parameters for the 1st fit
                         'init_pc_weights': None,                      # Initial weights for each mode in the first fit.
@@ -40,7 +38,7 @@ anthro_data_path = r'{}/target_landmarks/Left_side_all_predictive_factors.csv'.f
 pred_path = '{}/pred_meshes/{}'.format(os.getcwd(),general_fit_settings['pred_path'])
 if not os.path.exists(pred_path):
     os.makedirs(pred_path)
-errors_path = '{}/pred_meshes/{}/{}_lm_errors.txt'.format(os.getcwd(),general_fit_settings['pred_path'],general_fit_settings['ssm_name'])
+errors_path = '{}/pred_meshes/{}/shape_model_lm_errors.txt'.format(os.getcwd(),general_fit_settings['pred_path'])
 case_data = np.array([133,313.6,159.4,297.2]) #height,ASIS width,fem length,tib length
 if os.path.exists(errors_path):
     os.remove(errors_path)

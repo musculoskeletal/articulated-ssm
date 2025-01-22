@@ -14,9 +14,7 @@ import os
 
 class SSMHandler:
     def __init__(self, general_fit_settings,num,side):
-        self.name = general_fit_settings['name']
         self.side = side
-        self.ssm_name = general_fit_settings['ssm_name']
         self.include_patella = general_fit_settings['include_patella']
         if general_fit_settings['LOO']:
             self.ssm_name_bones_incl = 'shape_model_LOO'
@@ -82,8 +80,8 @@ class SSMHandler:
         self.reconstructed_nodes_per_bone = {}
 
     def load_coupled_ssm(self):
-        self.ssm_pc_file = r'{}/{}_{}_side.pc.npz'.format(self.coupled_ssm_dir,self.ssm_name,self.side)
-        self.ssm_mean_file = r'{}/{}_{}_side_mean.ply'.format(self.coupled_ssm_dir,self.ssm_name,self.side)
+        self.ssm_pc_file = r'{}/shape_model_{}_side.pc.npz'.format(self.coupled_ssm_dir, self.side)
+        self.ssm_mean_file = r'{}/shape_model_{}_side_mean.ply'.format(self.coupled_ssm_dir, self.side)
         self.ssm_mean = vtktools.loadpoly(self.ssm_mean_file)
         #self.coupled_pcs = PCA.loadPrincipalComponents(self.ssm_pc_file, mean = self.ssm_mean.v.reshape(-1))
         self.coupled_pcs = PCA.loadPrincipalComponents(self.ssm_pc_file)
