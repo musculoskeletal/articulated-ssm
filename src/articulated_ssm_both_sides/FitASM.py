@@ -3,8 +3,6 @@ from gias3.registration import alignment_fitting
 from gias3.common import transform3D
 from numpy.linalg import inv
 from scipy import optimize
-import PlotFunctions
-import matplotlib.pyplot as plt
 
 import SaveMesh
 
@@ -28,12 +26,9 @@ class FitASM:
             if self.side == 'left':
                 self.target_landmarks = self.fit_data['landmark_handler_l'].target_landmarks
                 self.source_landmarks = self.fit_data['landmark_handler_l'].source_landmarks
-                self.lm_to_fit = self.fit_data['landmark_handler_l'].landmark_names_to_fit
-            if self.side == 'right':
+            elif self.side == 'right':
                 self.target_landmarks = self.fit_data['landmark_handler_r'].target_landmarks
                 self.source_landmarks = self.fit_data['landmark_handler_r'].source_landmarks
-                self.lm_to_fit = self.fit_data['landmark_handler_r'].landmark_names_to_fit
-
         self.ll_model = ll_model
 
         self.multi_fit = None
@@ -53,44 +48,45 @@ class FitASM:
 
         def _x_splitter(x):
             if self.side == 'both':
-                pel_rigid_index = self.N_PARAMS_PELVIS
-                pc_weight_index_L = pel_rigid_index + len(pc_modes_it)
-                pc_weight_index_R = pc_weight_index_L + len(pc_modes_it)
-                hip_rot_index_L = pc_weight_index_R + self.N_PARAMS_HIP
-                knee_rot_index_L = hip_rot_index_L + self.N_PARAMS_KNEE
-                hip_rot_index_R = knee_rot_index_L + self.N_PARAMS_HIP
-                knee_rot_index_R =hip_rot_index_R + self.N_PARAMS_KNEE
+                pc_weights_index_L = len(pc_modes_it)
+                pc_weights_index_R = pc_weights_index_L + len(pc_modes_it)
+                pel_rigid_index_L = pc_weights_index_R + self.N_PARAMS_PELVIS
+                pel_rigid_index_R = pel_rigid_index_L + self.N_PARAMS_PELVIS
+                hip_rot_x_index_L = pel_rigid_index_R + self.N_PARAMS_HIP
+                knee_rot_x_index_L = hip_rot_x_index_L + self.N_PARAMS_KNEE
+                hip_rot_x_index_R = knee_rot_x_index_L + self.N_PARAMS_HIP
+                knee_rot_x_index_R = hip_rot_x_index_R + self.N_PARAMS_KNEE
 
-                x_split = [x[:pel_rigid_index],  # rigid pelvis rotation
-                           x[pel_rigid_index:pc_weight_index_L],  # pc weights left side
-                           x[pc_weight_index_L:pc_weight_index_R],  # pc weights right side
-                           x[pc_weight_index_R:hip_rot_index_L],  # hip left
-                           x[hip_rot_index_L:knee_rot_index_L],  # knee left
-                           x[knee_rot_index_L:hip_rot_index_R],  # hip right
-                           x[hip_rot_index_R:]]  # knee right
-
+                x_split = [x[:pc_weights_index_L],  # pc weights left side
+                           x[pc_weights_index_L:pc_weights_index_R],  # pc weights right side
+                           x[pc_weights_index_R:pel_rigid_index_L],   # init rigid pelvis L
+                           x[pel_rigid_index_L:pel_rigid_index_R],  # init rigid pelvis L
+                           x[pel_rigid_index_R:hip_rot_x_index_L],  # hip left
+                           x[hip_rot_x_index_L:knee_rot_x_index_L],  # knee left
+                           x[knee_rot_x_index_L:hip_rot_x_index_R],  # hip right
+                           x[hip_rot_x_index_R:]]  # knee right
 
             else:
-                pel_rigid_index = self.N_PARAMS_PELVIS
-                hip_rot_index = pel_rigid_index + self.N_PARAMS_HIP
-                knee_rot_index = hip_rot_index + self.N_PARAMS_KNEE
+                hip_rigid_x_index = len(pc_modes_it)
+                hip_rot_x_index = hip_rigid_x_index + self.N_PARAMS_PELVIS
+                knee_rot_x_index = hip_rot_x_index + self.N_PARAMS_HIP
 
-                x_split = [x[:pel_rigid_index],  # pc weights
-                           x[pel_rigid_index:hip_rot_index],  # init rigid pelvis
-                           x[hip_rot_index:knee_rot_index],  # hip left
-                           x[knee_rot_index:]]  # knee left
+                x_split = [x[:hip_rigid_x_index],  # pc weights
+                           x[hip_rigid_x_index:hip_rot_x_index],  # init rigid pelvis
+                           x[hip_rot_x_index:knee_rot_x_index],  # hip left
+                           x[knee_rot_x_index:]]  # knee left
             return x_split
 
         def objective_function(x):
             x_split = _x_splitter(x)
 
             if self.side == 'left':
-                self.ll_model.ll_l.update_all_models(x_split[3], pc_modes_it, x_split[0], x_split[1], x_split[2])
+                self.ll_model.ll_l.update_all_models(x_split[0], pc_modes_it, x_split[1], x_split[2], x_split[3])
             elif self.side == 'right':
-                self.ll_model.ll_r.update_all_models(x_split[3], pc_modes_it, x_split[0], x_split[1], x_split[2])
+                self.ll_model.ll_r.update_all_models(x_split[0], pc_modes_it, x_split[1], x_split[2], x_split[3])
             elif self.side == 'both':
-                self.ll_model.ll.update_all_models(x_split[3], x_split[2], pc_modes_it, x_split[0], x_split[3],
-                                                   x_split[4], x_split[5], x_split[6])
+                self.ll_model.ll.update_all_models(x_split[0], x_split[1], pc_modes_it, x_split[2], x_split[3],
+                                                   x_split[4], x_split[5], x_split[6], x_split[7])
                 # self.ll_model.ll_l.update_all_models(x_split[0], pc_modes_it, x_split[2], x_split[3], x_split[4])
                 # self.ll_model.ll_r.update_all_models(x_split[1], pc_modes_it, x_split[2], x_split[5], x_split[6])
 
@@ -98,9 +94,9 @@ class FitASM:
             # calc squared mahalanobis distance
             m2 = 0.0
             if self.mweight is not None:
-                m2 = mweight_it * ((x_split[3] ** 2).sum())
+                m2 = mweight_it * ((x_split[0] ** 2).sum())
                 if self.side == 'both':
-                    m2 = (mweight_it * ((x_split[1] ** 2).sum()) + (mweight_it * ((x_split[2] ** 2).sum()))) / 2
+                    m2 = ((mweight_it * ((x_split[0] ** 2).sum())) + (mweight_it * ((x_split[1] ** 2).sum()))) / 2
                     print(m2)
                 maha_errors.append(m2)
 
@@ -115,11 +111,10 @@ class FitASM:
                 if self.side == 'left':
                     self.fit_data['landmark_handler_l'].update_source_landmarks_dict()
                     target_lms_list, source_lms_list = self.fit_data['landmark_handler_l'].obtain_landmark_lists_from_dict()
-                if self.side == 'right':
+                elif self.side == 'right':
                     self.fit_data['landmark_handler_r'].update_source_landmarks_dict()
-                    target_lms_list, source_lms_list = self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
-                #PlotFunctions.plot_all_bones_with_source_and_target_lms(self.ll_model, source_lms_list,
-                 #                                                       target_lms_list)
+                    target_lms_list, source_lms_list = self.fit_data[
+                        'landmark_handler_r'].obtain_landmark_lists_from_dict()
                 # calc sum of squared distance between target and source landmarks
                 ssdist = ((((np.asarray(target_lms_list) - np.asarray(source_lms_list)))) ** 2.0).sum()  # in mm
                 # print('ssdist = {}mm'.format(ssdist))
@@ -150,46 +145,44 @@ class FitASM:
         x_input = []
 
         opt_results_1 = optimize.minimize(objective_function, x0, **minimise_args)
-
         xopt1_split = _x_splitter(opt_results_1['x'])
         x_hist_it.append(xopt1_split)
 
         if self.side == 'left':
-            self.ll_model.ll_l.update_all_models(xopt1_split[3],
+            self.ll_model.ll_l.update_all_models(xopt1_split[0],
                                                  pc_modes_it,
-                                                 xopt1_split[0],
                                                  xopt1_split[1],
-                                                 xopt1_split[2])
+                                                 xopt1_split[2],
+                                                 xopt1_split[3])
 
         elif self.side == 'right':
-            self.ll_model.ll_r.update_all_models(xopt1_split[3],
+            self.ll_model.ll_r.update_all_models(xopt1_split[0],
                                                  pc_modes_it,
-                                                 xopt1_split[0],
                                                  xopt1_split[1],
-                                                 xopt1_split[2])
+                                                 xopt1_split[2],
+                                                 xopt1_split[3])
         elif self.side == 'both':
-            self.ll_model.ll.update_all_models(xopt1_split[1],
-                                               xopt1_split[2],
+            self.ll_model.ll.update_all_models(xopt1_split[0],
+                                               xopt1_split[1],
                                                pc_modes_it,
-                                               xopt1_split[0],
+                                               xopt1_split[2],
                                                xopt1_split[3],
                                                xopt1_split[4],
                                                xopt1_split[5],
-                                               xopt1_split[6])
+                                               xopt1_split[6],
+                                               xopt1_split[7])
 
         if self.lm_fit:
             if self.side == 'left':
                 self.fit_data['landmark_handler_l'].update_source_landmarks_dict()
                 opt_target_lms_list, opt_source_lms_list = \
                     self.fit_data['landmark_handler_l'].obtain_landmark_lists_from_dict()
-            if self.side == 'right':
+            elif self.side == 'right':
                 self.fit_data['landmark_handler_r'].update_source_landmarks_dict()
                 opt_target_lms_list, opt_source_lms_list = \
                     self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
-            SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit, self.case,
-                                       self.pred_path, self.side, xopt1_split)
-            PlotFunctions.plot_all_bones_with_source_and_target_lms(self.ll_model, opt_source_lms_list,
-                                                                    opt_target_lms_list, self.side)
+            SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.case,
+                                       self.pred_path, self.side)
             opt_landmark_dist = \
                 np.linalg.norm((np.asarray(opt_target_lms_list) - np.asarray(opt_source_lms_list)), axis=1)
             opt_ssdist = ((opt_landmark_dist) ** 2).sum()
@@ -211,19 +204,6 @@ class FitASM:
             print('opt_dist_error = {}'.format(dist_errors[opt_index]))
             print('opt_maha_error = {}'.format(maha_errors[opt_index]))
             print('opt_total_error = {}'.format(total_errors[opt_index]))
-            PlotFunctions.plot_all_bones_with_segmentations(self.ll_model, self.segmentations)
-
-        # plot errors during minimisation
-        plot = False
-        if plot == True:
-            plt.plot(dist_errors, 'r-', label='sum of squared distance')
-            plt.plot(maha_errors, 'b-', label='sum of squared Mahalanobis distance')
-            plt.plot(total_errors, 'g-', label='total error')
-            plt.legend()
-            plt.title('fit errors')
-            plt.ylabel('squared distance')
-            plt.xlabel('iteration #')
-            plt.show()
 
         return x_hist_it
 
@@ -255,11 +235,13 @@ class FitASM:
                         self.init_pc_weights = self.init_pc_weights[:(len(self.pc_modes[it]))]
                         init_pc_weights_extra = self.init_pc_weights[len(self.pc_modes[it - 1]):]
                     else:
-                        init_pc_weights_extra = np.zeros(n_modes_diff)
-                    #if n_modes_diff > 0:
-                    x0 = np.hstack([self.x0[:total_rigid_params],np.hstack([self.x0[total_rigid_params:],init_pc_weights_extra])])
-                    #elif n_modes_diff < 0:
-                    #    x0 = np.hstack([self.x0[:len(self.pc_modes)], self.x0[-total_rigid_params:]])
+                        init_pc_weights_extra = np.zeros(len(self.pc_modes[it]))
+                    if n_modes_diff > 0:
+                        x0 = np.hstack([np.hstack([self.x0[:-total_rigid_params],
+                                                   init_pc_weights_extra]),
+                                        self.x0[-total_rigid_params:]])
+                    elif n_modes_diff < 0:
+                        x0 = np.hstack([self.x0[:len(self.pc_modes)], self.x0[-total_rigid_params:]])
                 else:
                     x0 = self.x0
 
@@ -345,17 +327,18 @@ class FitASM:
             model = self.ll_model.ll_r
 
         if self.side == 'both':
-            init_x = np.hstack([init_rigid,
+            init_x = np.hstack([init_pc_weights,
                                 init_pc_weights,
-                                init_pc_weights,
+                                init_rigid,
+                                init_rigid,
                                 [0, ] * self.ll_model.ll.N_PARAMS_HIP,
                                 [0, ] * self.ll_model.ll.N_PARAMS_KNEE,
                                 [0, ] * self.ll_model.ll.N_PARAMS_HIP,
                                 [0, ] * self.ll_model.ll.N_PARAMS_KNEE])
         else:
-            init_x = np.hstack([init_rigid,
+            init_x = np.hstack([init_pc_weights,
+                                init_rigid,
                                 [0, ] * model.N_PARAMS_HIP,
-                                [0, ] * model.N_PARAMS_KNEE,
-                                init_pc_weights])
+                                [0, ] * model.N_PARAMS_KNEE])
 
         return init_x
