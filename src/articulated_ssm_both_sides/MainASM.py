@@ -13,7 +13,6 @@ import PLSR
 startTime = time.time()
 general_fit_settings = {'segm_fit': False,                           # Fit using segmentation data
                         'lm_fit': True,                            # Fit using landmark coordinates
-                        'side': 'both',                             # Either 'left', 'right' or 'both'
                         'include_patella': False,                    # Include patella
                         'patella_shift': np.array([50, 50, -10]),
                         'pc_modes': [[0],[0,1,2,3]], #, [[0,1],[0, 1, 2, 3, 4]],      # PC modes to fit (multi fit: [[],[]])
@@ -58,13 +57,9 @@ if general_fit_settings['PLSR'] == True:
         general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes']))]
         print(general_fit_settings['init_pc_weights'])
 
-if general_fit_settings['side'] == 'both':
-    test_model.ll_l.load_bones_and_model()
-    test_model.ll_r.load_bones_and_model()
-if general_fit_settings['side'] == 'left':
-    test_model.ll_l.load_bones_and_model()
-if general_fit_settings['side'] == 'right':
-    test_model.ll_r.load_bones_and_model()
+# Load bones and model.
+test_model.ll_l.load_bones_and_model()
+test_model.ll_r.load_bones_and_model()
 
 # Initialize data for minimisation
 fit_data = {}  # Dictionary with data to fit the ASM to
