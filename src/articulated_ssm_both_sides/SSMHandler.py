@@ -13,10 +13,10 @@ import os
 
 
 class SSMHandler:
-    def __init__(self, general_fit_settings,num,side):
+    def __init__(self, general_fit_settings, num, side, loo=False):
         self.side = side
         self.include_patella = general_fit_settings['include_patella']
-        if general_fit_settings['LOO']:
+        if loo:
             self.ssm_name_bones_incl = 'shape_model_LOO'
             self.coupled_ssm_dir = r'{}/coupled_ssm/{}'.format(os.getcwd(), self.ssm_name_bones_incl)
         else:
@@ -71,7 +71,7 @@ class SSMHandler:
             read_region_node_nrs_from_txt(
                 r'{}/tibiafibula/knee_node_nrs_tibia_{}.txt'.format(self.ssm_regions_dir, self.side), 'knee_nodes')
 
-        if general_fit_settings['LOO']:
+        if loo:
             self.load_coupled_ssm_loo(num)
         else:
             self.load_coupled_ssm()

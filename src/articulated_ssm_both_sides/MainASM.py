@@ -27,7 +27,6 @@ general_fit_settings = {'segm_fit': False,                           # Fit using
                         'x0': None,                                  # Initial parameters for the 1st fit
                         'init_pc_weights': None,                      # Initial weights for each mode in the first fit.
                         'correct_markers': True,                     # if motion capture markers are used for prediction: True
-                        'LOO': False,                                # if a leave one out analysis is being conducted
                         'PLSR': False,                                  # if a partial least squares regression is being conducted to provide an initial guess to the shape model
                         'case_name': 'RCH05'
                         }

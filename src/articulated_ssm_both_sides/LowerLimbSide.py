@@ -8,7 +8,7 @@ from scipy.spatial import cKDTree
 
 
 class LowerLimbSide:
-    def __init__(self, side, ssm_handler, general_fit_settings, ll_settings):
+    def __init__(self, side, ssm_handler, general_fit_settings, ll_settings, loo=False):
         self.side = side
         self.ssm_handler = ssm_handler
         self.include_patella = general_fit_settings['include_patella']
@@ -33,7 +33,7 @@ class LowerLimbSide:
         self.knee_fixed = general_fit_settings['knee_fixed']
         self.allow_knee_adduction_dof = general_fit_settings['allow_knee_adduction_dof']
         self.allow_knee_adduction_correction = general_fit_settings['allow_knee_adduction_correction']
-        self.loo = general_fit_settings['LOO']
+        self.loo = loo
 
     def import_opposite_side(self, ll):
     # function to associate two lower limb models with eachother in the case of using both sides
