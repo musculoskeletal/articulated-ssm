@@ -53,11 +53,11 @@ class SSMHandler:
                 r'{}/pelvis/acetabulum_{}_verts.txt'.format(self.ssm_regions_dir, self.side), 'acetabulum_nodes')
         self.ssm_lm_node_nrs_femur[self.side] = \
             read_lm_node_nrs_from_txt(
-                r'{}/femur/local_landmark_node_nrs_{}.txt'.format(self.ssm_regions_dir,self.side))
+                r'{}/femur/local_landmark_node_nrs_{}.txt'.format(self.ssm_regions_dir, self.side))
         self.ssm_lm_node_nrs_tibiafibula[self.side] = \
             read_lm_node_nrs_from_txt(
                 r'{}/tibiafibula/local_landmark_node_nrs_{}.txt'.format(self.ssm_regions_dir, self.side))
-        if self.include_patella == True:
+        if self.include_patella is True:
             self.ssm_lm_node_nrs_patella[self.side] = \
                 read_lm_node_nrs_from_txt(
                     r'{}/patella/local_landmark_node_nrs_{}.txt'.format(self.ssm_regions_dir, self.side))
@@ -83,14 +83,14 @@ class SSMHandler:
         self.ssm_pc_file = r'{}/shape_model_{}_side.pc.npz'.format(self.coupled_ssm_dir, self.side)
         self.ssm_mean_file = r'{}/shape_model_{}_side_mean.ply'.format(self.coupled_ssm_dir, self.side)
         self.ssm_mean = vtktools.loadpoly(self.ssm_mean_file)
-        #self.coupled_pcs = PCA.loadPrincipalComponents(self.ssm_pc_file, mean = self.ssm_mean.v.reshape(-1))
+        # self.coupled_pcs = PCA.loadPrincipalComponents(self.ssm_pc_file, mean = self.ssm_mean.v.reshape(-1))
         self.coupled_pcs = PCA.loadPrincipalComponents(self.ssm_pc_file)
-        self.ssm_bone_node_nrs_file = r'{}/Coupled_SSM_node_nrs_per_bone_mesh_{}.txt'.format(self.coupled_ssm_dir,self.side)
-        self.ssm_bone_face_nrs_file = r'{}/Coupled_SSM_face_nrs_per_bone_mesh_{}.txt'.format(self.coupled_ssm_dir,self.side)
+        self.ssm_bone_node_nrs_file = r'{}/Coupled_SSM_node_nrs_per_bone_mesh_{}.txt'.format(self.coupled_ssm_dir, self.side)
+        self.ssm_bone_face_nrs_file = r'{}/Coupled_SSM_face_nrs_per_bone_mesh_{}.txt'.format(self.coupled_ssm_dir, self.side)
         self.split_mean_ssm_geometry_per_bone(self.ssm_mean.v)
         self.split_mean_ssm_faces(self.ssm_mean.f)
 
-    def load_coupled_ssm_loo(self,num,):
+    def load_coupled_ssm_loo(self, num):
         self.ssm_pc_file = r'{}/Left_side{}.pc.npz'.format(self.coupled_ssm_dir, str(num))
         self.coupled_pcs = PCA.loadPrincipalComponents(self.ssm_pc_file)
         self.ssm_mean_file = r'{}/Left_side{}_mean.ply'.format(self.coupled_ssm_dir, str(num))
@@ -100,8 +100,8 @@ class SSMHandler:
         self.split_mean_ssm_faces(self.ssm_mean.f)
 
     def reconstruct_ssm(self, pc_weights, pc_modes):
-        #print('pred_weights:',self.coupled_pcs.getWeightsBySD(pc_modes, pc_weights))
-        #print('sd weights:', pc_weights)
+        # print('pred_weights:',self.coupled_pcs.getWeightsBySD(pc_modes, pc_weights))
+        # print('sd weights:', pc_weights)
         reconstructed = self.coupled_pcs.reconstruct(self.coupled_pcs.getWeightsBySD(pc_modes, pc_weights), pc_modes)
         self.reconstructed = reconstructed.reshape(int(len(reconstructed)/3), 3)
 
@@ -171,10 +171,6 @@ class SSMHandler:
         return pel_mesh, fem_mesh, tib_mesh
 
 
-
-
-
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Functions to read node number files
 
@@ -208,4 +204,3 @@ def read_lm_node_nrs_from_txt(txt_file):
 def read_region_node_nrs_from_txt(txt_file, region_name):
     ssm_region_node_nrs = {region_name: [int(x) for x in np.loadtxt(txt_file)]}
     return ssm_region_node_nrs
-

@@ -16,8 +16,8 @@ class FemurModel:
 
         self.landmark_node_nrs = ssm_handler.ssm_lm_node_nrs_femur
         self.node_coords = None
-        #self.node_coords_fem_l = None
-        #self.node_coords_fem_r = None
+        # self.node_coords_fem_l = None
+        # self.node_coords_fem_r = None
         self.landmark_coords = dict(left={}, right={})
         self.region_coords = dict(left={}, right={})
         self.femoral_head_centre = ()
@@ -48,4 +48,3 @@ class FemurModel:
                                                            self.landmark_coords[self.side]['MEC_VERTEX'],
                                                            self.landmark_coords[self.side]['LEC_VERTEX'],
                                                            side=self.side))
-

@@ -18,9 +18,9 @@ class LowerLimbSide:
         self.N_PARAMS_RIGID = self.N_PARAMS_PELVIS + self.N_PARAMS_HIP + self.N_PARAMS_KNEE
         self._neutral_params = [[0, ],  # pc_weights
                                 [0, ],  # pc_modes
-                                [0] * self.N_PARAMS_PELVIS,  # pelvis_rigid dof
-                                [0] * self.N_PARAMS_HIP,  # hip_rot dof
-                                [0] * self.N_PARAMS_KNEE]  # knee_rot
+                                [0] * self.N_PARAMS_PELVIS,     # pelvis_rigid dof
+                                [0] * self.N_PARAMS_HIP,        # hip_rot dof
+                                [0] * self.N_PARAMS_KNEE]       # knee_rot
 
         self.pelvis_model = PelvisModel(ssm_handler, general_fit_settings, side)
         self.femur_model = FemurModel(ssm_handler, general_fit_settings, side)
@@ -36,8 +36,10 @@ class LowerLimbSide:
         self.loo = loo
 
     def import_opposite_side(self, ll):
-    # function to associate two lower limb models with eachother in the case of using both sides
-    # used to keep consistent coordinate systems mainly in the pelvis
+        """
+        function to associate two lower limb models with each other in the case of using both sides
+        used to keep consistent coordinate systems mainly in the pelvis
+        """
         if self.side == 'left':
             self.ll_r = ll
         else:
@@ -166,7 +168,7 @@ class LowerLimbSide:
         # abduction (floating)
         self.femur_model.node_coords = transform3D.transformRotateAboutAxis(self.femur_model.node_coords,
                                                                             self.direction_parameters[self.side]
-                                                                        ['hip_add_coeff'] * hip_rot[2],
+                                                                            ['hip_add_coeff'] * hip_rot[2],
                                                                             o,
                                                                             o + abd)
 
@@ -177,7 +179,7 @@ class LowerLimbSide:
 
         self.femur_model.node_coords = transform3D.transformRotateAboutAxis(self.femur_model.node_coords,
                                                                             self.direction_parameters[self.side]
-                                                                        ['hip_rot_coeff'] * hip_rot[1],
+                                                                            ['hip_rot_coeff'] * hip_rot[1],
                                                                             o,
                                                                             o + rot)
 
@@ -346,7 +348,6 @@ class LowerLimbSide:
         tp_lat = self.tibfib_model.landmark_coords[self.side]['tib_plateau_lat']
         tp_med = self.tibfib_model.landmark_coords[self.side]['tib_plateau_med']
 
-
         # tibial plateau vector
         if self.side == 'left':
             tp_v = tp_med - tp_lat
@@ -355,13 +356,13 @@ class LowerLimbSide:
         # find the closest femur condyle points to tp_lat and tp_med
         (med_d, lat_d), (fc_med_i, fc_lat_i) = femur_points_tree.query([tp_med, tp_lat])
 
-        #if fc_med_i == fc_lat_i:  # To make sure fc_v is not NaN
-       #     fc_med_i -= 1
+        # if fc_med_i == fc_lat_i:  # To make sure fc_v is not NaN
+        #     fc_med_i -= 1
 
         # femoral condyle vector
-        #if self.side == 'left':
+        # if self.side == 'left':
         #    fc_v = femur_points_tree.data[fc_med_i] - femur_points_tree.data[fc_lat_i]
-        #elif self.side == 'right':
+        # elif self.side == 'right':
         #    fc_v = femur_points_tree.data[fc_lat_i] - femur_points_tree.data[fc_med_i]
 
         fc_med_i = self.femur_model.landmark_coords[self.side]['med_bot_con']

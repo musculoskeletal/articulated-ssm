@@ -4,7 +4,7 @@ from gias3.common import math
 
 CORRECT_FOR_SKIN_PADDING_AND_MARKER_RADIUS = False
 SKIN_PADDING = 5
-MARKER_RADIUS = 9 # 7mm marker radius + 2mm marker plate
+MARKER_RADIUS = 9   # 7mm marker radius + 2mm marker plate
 
 
 def correct_target_markers(target_markers_per_bone, side):
@@ -131,6 +131,7 @@ def correct_target_markers(target_markers_per_bone, side):
                         ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING)
                 else:
                     print('Error in skin padding and marker radius correction')
+
 
 def correct_target_markers_no_med(target_markers_per_bone, side_m):
     """Correct the target marker location using the marker radius and skin padding

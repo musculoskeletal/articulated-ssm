@@ -1,10 +1,11 @@
 import LowerLimbSide
 import SSMHandler
 
+
 class LowerLimb:
     def __init__(self, general_fit_settings):
         self.include_patella = general_fit_settings['include_patella']
-        #self.ssm_handler = ssm_handler
+        # self.ssm_handler = ssm_handler
 
         self.lower_limb_settings = {'dof': {'N_PARAMS_PELVIS': 6,
                                             'N_PARAMS_HIP': 3,
@@ -19,7 +20,7 @@ class LowerLimb:
                                                                                           'knee_flex_coeff': -1.0,
                                                                                           'knee_add_coeff': 1.0}}}
 
-        ssm_handler_l = SSMHandler.SSMHandler(general_fit_settings, 0, side = 'left')
+        ssm_handler_l = SSMHandler.SSMHandler(general_fit_settings, 0, side='left')
         ssm_handler_r = SSMHandler.SSMHandler(general_fit_settings, 0, side='right')
         self.ll_l = LowerLimbSide.LowerLimbSide('left', ssm_handler_l, general_fit_settings, self.lower_limb_settings)
         self.ll_r = LowerLimbSide.LowerLimbSide('right', ssm_handler_r, general_fit_settings, self.lower_limb_settings)

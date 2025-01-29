@@ -48,7 +48,7 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, case, pred_p
 
         headers = ['pelvis_rigid', 'hip_rot', 'knee_rot', 'pc_weights']
         with open(x_opt, "w+") as file:
-            for header, row in zip(headers,xopt):
+            for header, row in zip(headers, xopt):
                 file.write(f"{header} " + " ".join(map(str, row)) + "\n")
 
         # np.savetxt(orig_lms, target_lms)
@@ -97,7 +97,7 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, case, pred_p
 
         headers = ['pelvis_rigid', 'hip_rot', 'knee_rot', 'pc_weights']
         with open(x_opt, "w+") as file:
-            for header, row in zip(headers,xopt):
+            for header, row in zip(headers, xopt):
                 file.write(f"{header} " + " ".join(map(str, row)) + "\n")
 
         pred_mesh_pel = vtktools.Writer(filename=output_pel, v=bone_mesh_pel.v, f=bone_mesh_pel.f)
