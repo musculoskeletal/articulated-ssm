@@ -222,20 +222,3 @@ def correct_target_markers_no_med(target_markers_per_bone, side_m):
                         ml_axis * (MARKER_RADIUS + SKIN_PADDING)
                 else:
                     print('Error in skin padding and marker radius correction')
-
-    #if plot:
-     #   v = fieldvi.FieldVi()
-      #  lms = []
-       # lms_original = []
-        #for bone in target_markers_per_bone.keys():
-         #   for side in target_markers_per_bone[bone].keys():
-          #      for lm in target_markers_per_bone[bone][side].keys():
-           #         lms.append(target_markers_per_bone[bone][side][lm])
-            #        lms_original.append(original_target_markers_per_bone[bone][side][lm])
-        #v.addData('target_lms_original',
-        #          np.asarray(lms_original),
-        #          render_args={'mode': 'sphere', 'scale_factor': 10.0, 'color': (0, 0, 1)})
-        #v.addData('target_lms',
-        #          np.asarray(lms),
-        #          render_args={'mode': 'sphere', 'scale_factor': 10.0, 'color': (0, 1, 0)})
-        #v.configure_traits()
