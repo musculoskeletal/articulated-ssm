@@ -7,10 +7,8 @@ import os
 import LandmarkHandler
 import SegmentationHandler
 import FitASM_2 as FitASM
-import time
 import PLSR
 
-startTime = time.time()
 general_fit_settings = {'segm_fit': False,                           # Fit using segmentation data
                         'lm_fit': True,                            # Fit using landmark coordinates
                         'include_patella': False,                    # Include patella
@@ -80,10 +78,6 @@ if general_fit_settings['lm_fit']:
 # Fit articulated SSM
 asm_fitter_l = FitASM.FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
 errors.write(str(asm_fitter_l.mae_lm)+','+str(asm_fitter_l.rmse_lm)+','+str(asm_fitter_l.opt_mweight)+'\n')
-exectutionTime = (time.time() - startTime)
-print('Execution time in seconds: ' + str(exectutionTime))
 
 asm_fitter_r = FitASM.FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'right')
 errors.write(str(asm_fitter_r.mae_lm)+','+str(asm_fitter_r.rmse_lm)+','+str(asm_fitter_r.opt_mweight)+'\n')
-exectutionTime = (time.time() - startTime)
-print('Execution time in seconds: ' + str(exectutionTime))
