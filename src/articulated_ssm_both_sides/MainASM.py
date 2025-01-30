@@ -32,56 +32,61 @@ general_fit_settings = {
     }
 
 
-# load the coupled SSM
-anthro_data_path = r'{}/target_landmarks/Left_side_all_predictive_factors.csv'.format(os.getcwd())
-pred_path = '{}/pred_meshes/{}'.format(os.getcwd(), general_fit_settings['pred_path'])
-if not os.path.exists(pred_path):
-    os.makedirs(pred_path)
-errors_path = '{}/pred_meshes/{}/shape_model_lm_errors.txt'.format(os.getcwd(), general_fit_settings['pred_path'])
-case_data = np.array([133, 313.6, 159.4, 297.2])    # height,ASIS width,fem length,tib length
+def run_asm(marker_data):
 
-if os.path.exists(errors_path):
-    os.remove(errors_path)
-errors = open(errors_path, 'w+')
-errors.write('mae_lm,rmse_lm,mweight\n')
+    # Load the coupled SSM.
+    pred_path = '{}/pred_meshes/{}'.format(os.getcwd(), general_fit_settings['pred_path'])
+    if not os.path.exists(pred_path):
+        os.makedirs(pred_path)
+    errors_path = '{}/pred_meshes/{}/shape_model_lm_errors.txt'.format(os.getcwd(), general_fit_settings['pred_path'])
 
-# Generate lower limb model
-test_model = LowerLimb(general_fit_settings)
+    if os.path.exists(errors_path):
+        os.remove(errors_path)
+    errors = open(errors_path, 'w+')
+    errors.write('mae_lm,rmse_lm,mweight\n')
 
-if general_fit_settings['PLSR'] is True:
+    # Generate and load lower limb model.
+    lower_limb_model = LowerLimb(general_fit_settings)
+    lower_limb_model.ll_l.load_bones_and_model()
+    lower_limb_model.ll_r.load_bones_and_model()
+
+    # Load landmark coordinates data to fit to.
+    fit_data = landmark_fit(lower_limb_model)
+
+    # Fit articulated SSM
+    asm_fitter_l = FitASM(lower_limb_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
+    errors.write(str(asm_fitter_l.mae_lm)+','+str(asm_fitter_l.rmse_lm)+','+str(asm_fitter_l.opt_mweight)+'\n')
+    asm_fitter_r = FitASM(lower_limb_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'right')
+    errors.write(str(asm_fitter_r.mae_lm)+','+str(asm_fitter_r.rmse_lm)+','+str(asm_fitter_r.opt_mweight)+'\n')
+
+
+def landmark_fit(lower_limb_model):
+    target_lms_file = r'{}/target_landmarks/{}_landmarks_mocap.txt'.format(os.getcwd(), general_fit_settings['case_name'])
+    landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
+
+    fit_data = {}
+    for side in ['left', 'right']:
+        fit_data[f'landmark_handler_{side[0]}'] = LandmarkHandler(
+            target_lms_file, landmark_names_to_fit, lower_limb_model, general_fit_settings['correct_markers'], side
+        )
+
+    return fit_data
+
+
+def segmentation_fit():
+    segmentations_dir = r'{}/segmentations'.format(os.getcwd())
+    segmentation_handler = SegmentationHandler(segmentations_dir, general_fit_settings)
+    fit_data = {'segmentation_handler': segmentation_handler}
+
+    return fit_data
+
+
+def plsr_fit():
+    anthro_data_path = r'{}/target_landmarks/Left_side_all_predictive_factors.csv'.format(os.getcwd())
+    case_data = np.array([133, 313.6, 159.4, 297.2])  # height,ASIS width,fem length,tib length
     pred_weights, pred_sd = plsr(case_data, anthro_data_path, general_fit_settings)
     if isinstance(general_fit_settings['pc_modes'][0], (list, tuple, np.ndarray)):
         general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes'][-1]))]
     else:
         general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes']))]
         print(general_fit_settings['init_pc_weights'])
-
-# Load bones and model.
-test_model.ll_l.load_bones_and_model()
-test_model.ll_r.load_bones_and_model()
-
-# Initialize data for minimisation
-fit_data = {}  # Dictionary with data to fit the ASM to
-
-# load segmentation data to fit to
-if general_fit_settings['segm_fit']:
-    segmentations_dir = r'{}/segmentations'.format(os.getcwd())
-    segmentation_handler = SegmentationHandler(segmentations_dir, general_fit_settings)
-    fit_data['segmentation_handler'] = segmentation_handler
-
-# load landmark coordinates data to fit to
-if general_fit_settings['lm_fit']:
-    target_lms_file = r'{}/target_landmarks/{}_landmarks_mocap.txt'.format(os.getcwd(), general_fit_settings['case_name'])
-    landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
-
-    for side in ['left', 'right']:
-        fit_data[f'landmark_handler_{side[0]}'] = LandmarkHandler(
-            target_lms_file, landmark_names_to_fit, test_model, general_fit_settings['correct_markers'], side
-        )
-
-# Fit articulated SSM
-asm_fitter_l = FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
-errors.write(str(asm_fitter_l.mae_lm)+','+str(asm_fitter_l.rmse_lm)+','+str(asm_fitter_l.opt_mweight)+'\n')
-
-asm_fitter_r = FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'right')
-errors.write(str(asm_fitter_r.mae_lm)+','+str(asm_fitter_r.rmse_lm)+','+str(asm_fitter_r.opt_mweight)+'\n')
