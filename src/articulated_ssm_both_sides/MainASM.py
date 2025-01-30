@@ -1,13 +1,14 @@
 # Main articulated SSM model fitting script
 # 25/01/2023
 
-from LowerLimb import LowerLimb as LowerLimb
-import numpy as np
 import os
-import LandmarkHandler
-import SegmentationHandler
-import FitASM_2 as FitASM
-import PLSR
+import numpy as np
+
+from articulated_ssm_both_sides.FitASM_2 import FitASM
+from articulated_ssm_both_sides.LandmarkHandler import LandmarkHandler
+from articulated_ssm_both_sides.SegmentationHandler import SegmentationHandler
+from articulated_ssm_both_sides.LowerLimb import LowerLimb
+from articulated_ssm_both_sides.PLSR import plsr
 
 
 general_fit_settings = {
@@ -48,7 +49,7 @@ errors.write('mae_lm,rmse_lm,mweight\n')
 test_model = LowerLimb(general_fit_settings)
 
 if general_fit_settings['PLSR'] is True:
-    pred_weights, pred_sd = PLSR.plsr(case_data, anthro_data_path, general_fit_settings)
+    pred_weights, pred_sd = plsr(case_data, anthro_data_path, general_fit_settings)
     if isinstance(general_fit_settings['pc_modes'][0], (list, tuple, np.ndarray)):
         general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes'][-1]))]
     else:
@@ -65,7 +66,7 @@ fit_data = {}  # Dictionary with data to fit the ASM to
 # load segmentation data to fit to
 if general_fit_settings['segm_fit']:
     segmentations_dir = r'{}/segmentations'.format(os.getcwd())
-    segmentation_handler = SegmentationHandler.SegmentationHandler(segmentations_dir, general_fit_settings)
+    segmentation_handler = SegmentationHandler(segmentations_dir, general_fit_settings)
     fit_data['segmentation_handler'] = segmentation_handler
 
 # load landmark coordinates data to fit to
@@ -74,13 +75,13 @@ if general_fit_settings['lm_fit']:
     landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
 
     for side in ['left', 'right']:
-        fit_data[f'landmark_handler_{side[0]}'] = LandmarkHandler.LandmarkHandler(
+        fit_data[f'landmark_handler_{side[0]}'] = LandmarkHandler(
             target_lms_file, landmark_names_to_fit, test_model, general_fit_settings['correct_markers'], side
         )
 
 # Fit articulated SSM
-asm_fitter_l = FitASM.FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
+asm_fitter_l = FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
 errors.write(str(asm_fitter_l.mae_lm)+','+str(asm_fitter_l.rmse_lm)+','+str(asm_fitter_l.opt_mweight)+'\n')
 
-asm_fitter_r = FitASM.FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'right')
+asm_fitter_r = FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'right')
 errors.write(str(asm_fitter_r.mae_lm)+','+str(asm_fitter_r.rmse_lm)+','+str(asm_fitter_r.opt_mweight)+'\n')

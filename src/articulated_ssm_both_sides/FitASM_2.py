@@ -4,7 +4,7 @@ from gias3.common import transform3D
 from numpy.linalg import inv
 from scipy import optimize
 
-import SaveMesh
+from articulated_ssm_both_sides import SaveMesh
 
 
 class FitASM:

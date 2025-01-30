@@ -1,10 +1,11 @@
-from PelvisModel import PelvisModel as PelvisModel
-from FemurModel import FemurModel as FemurModel
-from TibiaFibulaModel import TibiaFibulaModel as TibiaFibulaModel
-from PatellaModel import PatellaModel as PatellaModel
-from gias3.common import transform3D, math
 import numpy as np
 from scipy.spatial import cKDTree
+from gias3.common import transform3D, math
+
+from articulated_ssm_both_sides.FemurModel import FemurModel
+from articulated_ssm_both_sides.PelvisModel import PelvisModel
+from articulated_ssm_both_sides.PatellaModel import PatellaModel
+from articulated_ssm_both_sides.TibiaFibulaModel import TibiaFibulaModel
 
 
 class LowerLimbSide:

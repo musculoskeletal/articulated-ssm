@@ -1,5 +1,5 @@
 import numpy as np
-import correct_markers as cm
+import articulated_ssm_both_sides.correct_markers as cm
 
 class LandmarkHandler:
     def __init__(self, target_lms_file, landmark_names_to_fit, ll_model, correct_markers, side):

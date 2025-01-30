@@ -1,15 +1,16 @@
 # Main articulated SSM model fitting script when using a train/test set
 # 25/01/2023
 
-import SSMHandler
-from LowerLimb import LowerLimb as LowerLimb
-import numpy as np
 import os
-import LandmarkHandler
-import SegmentationHandler
-import FitASM
 import time
-import PLSR
+import numpy as np
+
+from articulated_ssm_both_sides.FitASM import FitASM
+from articulated_ssm_both_sides.SSMHandler import SSMHandler
+from articulated_ssm_both_sides.LandmarkHandler import LandmarkHandler
+from articulated_ssm_both_sides.SegmentationHandler import SegmentationHandler
+from articulated_ssm_both_sides.LowerLimb import LowerLimb
+from articulated_ssm_both_sides.PLSR import plsr_loo
 
 
 general_fit_settings = {
@@ -66,7 +67,7 @@ for i in range(0, len(name_files)):
             general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes'])), i]
             print(general_fit_settings['init_pc_weights'])
     # load the coupled SSM
-    ssm_handler = SSMHandler.SSMHandler(general_fit_settings, i)
+    ssm_handler = SSMHandler(general_fit_settings, i)
 
     # Generate lower limb model
     test_model = LowerLimb(ssm_handler, general_fit_settings)
@@ -85,19 +86,19 @@ for i in range(0, len(name_files)):
     # load segmentation data to fit to
     if general_fit_settings['segm_fit']:
         segmentations_dir = r'{}/segmentations'.format(os.getcwd())
-        segmentation_handler = SegmentationHandler.SegmentationHandler(segmentations_dir, general_fit_settings)
+        segmentation_handler = SegmentationHandler(segmentations_dir, general_fit_settings)
         fit_data['segmentation_handler'] = segmentation_handler
 
     # load landmark coordinates data to fit to
     if general_fit_settings['lm_fit']:
         target_lms_file = r'{}/target_landmarks/aligned_lms_updated/{}_landmarks_mocap.txt'.format(os.getcwd(), case)
         landmark_names_to_fit = ['ASIS', 'PSIS', 'MEC', 'LEC', 'malleolus_med', 'malleolus_lat']
-        fit_data['landmark_handler'] = LandmarkHandler.LandmarkHandler(
+        fit_data['landmark_handler'] = LandmarkHandler(
             target_lms_file, landmark_names_to_fit, test_model, general_fit_settings['correct_markers'], general_fit_settings['side']
         )
 
     # Fit articulated SSM
-    asm_fitter = FitASM.FitASM(test_model, general_fit_settings, fit_data, case)
+    asm_fitter = FitASM(test_model, general_fit_settings, fit_data, case)
     errors.write(f"{case},{asm_fitter.mae_lm},{asm_fitter.rmse_lm},{asm_fitter.ssdist},{asm_fitter.opt_mweight}\n")
 
     exectutionTime = (time.time() - startTime)
