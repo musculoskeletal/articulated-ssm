@@ -51,7 +51,7 @@ def run_asm(marker_data):
     lower_limb_model.ll_r.load_bones_and_model()
 
     # Load landmark coordinates data to fit to.
-    fit_data = landmark_fit(lower_limb_model)
+    fit_data = landmark_fit(lower_limb_model, marker_data)
 
     # Fit articulated SSM
     asm_fitter_l = FitASM(lower_limb_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
@@ -60,14 +60,14 @@ def run_asm(marker_data):
     errors.write(str(asm_fitter_r.mae_lm)+','+str(asm_fitter_r.rmse_lm)+','+str(asm_fitter_r.opt_mweight)+'\n')
 
 
-def landmark_fit(lower_limb_model):
+def landmark_fit(lower_limb_model, marker_data):
     target_lms_file = r'{}/target_landmarks/{}_landmarks_mocap.txt'.format(os.getcwd(), general_fit_settings['case_name'])
     landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
 
     fit_data = {}
     for side in ['left', 'right']:
         fit_data[f'landmark_handler_{side[0]}'] = LandmarkHandler(
-            target_lms_file, landmark_names_to_fit, lower_limb_model, general_fit_settings['correct_markers'], side
+            marker_data, landmark_names_to_fit, lower_limb_model, general_fit_settings['correct_markers'], side
         )
 
     return fit_data
