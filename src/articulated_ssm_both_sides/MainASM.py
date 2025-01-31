@@ -61,7 +61,6 @@ def run_asm(marker_data):
 
 
 def landmark_fit(lower_limb_model, marker_data):
-    target_lms_file = r'{}/target_landmarks/{}_landmarks_mocap.txt'.format(os.getcwd(), general_fit_settings['case_name'])
     landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
 
     fit_data = {}
