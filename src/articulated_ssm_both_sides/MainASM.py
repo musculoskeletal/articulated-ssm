@@ -33,6 +33,10 @@ general_fit_settings = {
 
 
 def run_asm(marker_data):
+    """
+    Main entry point for ASM fitting process. Takes a dictionary containing the landmark positions
+    defining a single TRC frame.
+    """
 
     # Load the coupled SSM.
     pred_path = '{}/pred_meshes/{}'.format(os.getcwd(), general_fit_settings['pred_path'])
