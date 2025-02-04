@@ -10,7 +10,11 @@ def test(file_name):
     data_directory = os.path.join(test_directory, "data")
     marker_data_path = os.path.join(data_directory, file_name)
     marker_data = pd.read_pickle(marker_data_path)
-    run_asm(marker_data)
+
+    case_name = os.path.splitext(file_name)[0]
+    output_directory = os.path.join(test_directory, "_output", case_name)
+
+    run_asm(marker_data, output_directory)
 
 
 if __name__ == "__main__":

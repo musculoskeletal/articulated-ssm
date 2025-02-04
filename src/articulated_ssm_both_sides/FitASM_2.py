@@ -8,9 +8,8 @@ from articulated_ssm_both_sides import SaveMesh
 
 
 class FitASM:
-    def __init__(self, ll_model, general_fit_settings, fit_data, case, side):
-        self.case = case
-        self.pred_path = general_fit_settings['pred_path']
+    def __init__(self, ll_model, general_fit_settings, fit_data, output_directory, side):
+        self._output_directory = output_directory
         self.segm_fit = general_fit_settings['segm_fit']
         self.lm_fit = general_fit_settings['lm_fit']
         self.side = side
@@ -181,8 +180,8 @@ class FitASM:
                 self.fit_data['landmark_handler_r'].update_source_landmarks_dict()
                 opt_target_lms_list, opt_source_lms_list = \
                     self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
-            SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit, self.case,
-                                       self.pred_path, self.side, xopt1_split)
+            SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit, self._output_directory,
+                                       self.side, xopt1_split)
             opt_landmark_dist = \
                 np.linalg.norm((np.asarray(opt_target_lms_list) - np.asarray(opt_source_lms_list)), axis=1)
             opt_ssdist = (opt_landmark_dist ** 2).sum()

@@ -23,31 +23,21 @@ general_fit_settings = {
     'knee_fixed': False,                        # Fix the knee in initial position (0)
     'allow_knee_adduction_dof': True,           # Allow rotation in VV when placing tibia-fibula
     'allow_knee_adduction_correction': True,    # Allow VV rotation to obtain minimal knee gap
-    'pred_path': 'RCH05',
     'x0': None,                                 # Initial parameters for the 1st fit
     'init_pc_weights': None,                    # Initial weights for each mode in the first fit.
     'correct_markers': True,                    # if motion capture markers are used for prediction: True
     'PLSR': False,                              # if a partial least squares regression is used to provide an initial guess to shape model
-    'case_name': 'RCH05'
     }
 
 
-def run_asm(marker_data):
+def run_asm(marker_data, output_directory):
     """
     Main entry point for ASM fitting process. Takes a dictionary containing the landmark positions
     defining a single TRC frame.
+
+    :param marker_data: A dictionary containing the landmark positions defining a single TRC frame.
+    :param output_directory: The path to the directory where the mesh files should be saved.
     """
-
-    # Load the coupled SSM.
-    pred_path = '{}/pred_meshes/{}'.format(os.getcwd(), general_fit_settings['pred_path'])
-    if not os.path.exists(pred_path):
-        os.makedirs(pred_path)
-    errors_path = '{}/pred_meshes/{}/shape_model_lm_errors.txt'.format(os.getcwd(), general_fit_settings['pred_path'])
-
-    if os.path.exists(errors_path):
-        os.remove(errors_path)
-    errors = open(errors_path, 'w+')
-    errors.write('mae_lm,rmse_lm,mweight\n')
 
     # Generate and load lower limb model.
     lower_limb_model = LowerLimb(general_fit_settings)
@@ -57,11 +47,10 @@ def run_asm(marker_data):
     # Load landmark coordinates data to fit to.
     fit_data = landmark_fit(lower_limb_model, marker_data)
 
-    # Fit articulated SSM
-    asm_fitter_l = FitASM(lower_limb_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
-    errors.write(str(asm_fitter_l.mae_lm)+','+str(asm_fitter_l.rmse_lm)+','+str(asm_fitter_l.opt_mweight)+'\n')
-    asm_fitter_r = FitASM(lower_limb_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'right')
-    errors.write(str(asm_fitter_r.mae_lm)+','+str(asm_fitter_r.rmse_lm)+','+str(asm_fitter_r.opt_mweight)+'\n')
+    asm_fitter_l = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'left')
+    asm_fitter_r = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'right')
+
+    write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory)
 
 
 def landmark_fit(lower_limb_model, marker_data):
@@ -93,3 +82,11 @@ def plsr_fit():
     else:
         general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes']))]
         print(general_fit_settings['init_pc_weights'])
+
+
+def write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory):
+    metrics_path = os.path.join(output_directory, "asm_fit_metrics.txt")
+    with open(metrics_path, "w") as metrics_file:
+        metrics_file.write("MAE, RMSE, m_weight\n")
+        metrics_file.write(f"{asm_fitter_l.mae_lm}, {asm_fitter_l.rmse_lm}, {asm_fitter_l.opt_mweight}\n")
+        metrics_file.write(f"{asm_fitter_r.mae_lm}, {asm_fitter_r.rmse_lm}, {asm_fitter_r.opt_mweight}\n")

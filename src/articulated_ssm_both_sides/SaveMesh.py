@@ -4,7 +4,10 @@ import os
 import csv
 
 
-def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, case, pred_path, side, xopt):
+def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_directory, side, xopt):
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
     lms_to_fit_source = np.asarray([np.append(np.copy(lms_to_fit), 'hjc')])
     lms_to_fit_source = np.asarray([np.append(lms_to_fit_source, 'condyle_lat')])
     lms_to_fit_source = np.asarray([np.append(lms_to_fit_source, 'condyle_med')])
@@ -30,12 +33,12 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, case, pred_p
                                                                                                       node_coords_fem,
                                                                                                       node_coords_tib)
 
-        output_pel = '{}/pred_meshes/{}/{}_predicted_mesh_left_pelvis.stl'.format(os.getcwd(), pred_path, case)
-        output_fem = '{}/pred_meshes/{}/{}_predicted_mesh_left_femur.stl'.format(os.getcwd(), pred_path, case)
-        output_tib = '{}/pred_meshes/{}/{}_predicted_mesh_left_tibfib.stl'.format(os.getcwd(), pred_path, case)
-        pred_lms = '{}/pred_meshes/{}/{}_predicted_lms_left.txt'.format(os.getcwd(), pred_path, case)
-        orig_lms = '{}/pred_meshes/{}/{}_orignial_lms_left.txt'.format(os.getcwd(), pred_path, case)
-        x_opt = '{}/pred_meshes/{}/{}_x_opt_left.txt'.format(os.getcwd(), pred_path, case)
+        output_pel = os.path.join(output_directory, 'predicted_mesh_left_pelvis.stl')
+        output_fem = os.path.join(output_directory, 'predicted_mesh_left_femur.stl')
+        output_tib = os.path.join(output_directory, 'predicted_mesh_left_tibfib.stl')
+        pred_lms = os.path.join(output_directory, 'predicted_lms_left.txt')
+        orig_lms = os.path.join(output_directory, 'orignial_lms_left.txt')
+        x_opt = os.path.join(output_directory, 'x_opt_left.txt')
 
         pred_lms_save = np.concatenate((np.transpose(lms_to_fit_source), source_lms_save), axis=1)
         with open(pred_lms, "w+") as file:
@@ -79,12 +82,12 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, case, pred_p
                                                                                                       node_coords_fem,
                                                                                                       node_coords_tib)
 
-        output_pel = '{}/pred_meshes/{}/{}_predicted_mesh_right_pelvis.stl'.format(os.getcwd(), pred_path, case)
-        output_fem = '{}/pred_meshes/{}/{}_predicted_mesh_right_femur.stl'.format(os.getcwd(), pred_path, case)
-        output_tib = '{}/pred_meshes/{}/{}_predicted_mesh_right_tibfib.stl'.format(os.getcwd(), pred_path, case)
-        pred_lms = '{}/pred_meshes/{}/{}_predicted_lms_right.txt'.format(os.getcwd(), pred_path, case)
-        orig_lms = '{}/pred_meshes/{}/{}_orignial_lms_right.txt'.format(os.getcwd(), pred_path, case)
-        x_opt = '{}/pred_meshes/{}/{}_x_opt_right.txt'.format(os.getcwd(), pred_path, case)
+        output_pel = os.path.join(output_directory, 'predicted_mesh_right_pelvis.stl')
+        output_fem = os.path.join(output_directory, 'predicted_mesh_right_femur.stl')
+        output_tib = os.path.join(output_directory, 'predicted_mesh_right_tibfib.stl')
+        pred_lms = os.path.join(output_directory, 'predicted_lms_right.txt')
+        orig_lms = os.path.join(output_directory, 'orignial_lms_right.txt')
+        x_opt = os.path.join(output_directory, 'x_opt_right.txt')
 
         pred_lms_save = np.concatenate((np.transpose(lms_to_fit_source), source_lms_save), axis=1)
         with open(pred_lms, "w+") as file:
