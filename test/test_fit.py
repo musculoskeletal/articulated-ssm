@@ -18,5 +18,7 @@ def test(file_name):
 
 
 if __name__ == "__main__":
-    test("marker_data_1.pkl")
-    test("marker_data_2.pkl")
+    test("RCH01.pkl")
+    test("RCH05.pkl")
+    test("S1.pkl")
+    test("S2.pkl")
