@@ -21,7 +21,7 @@ class SSMHandler:
             self.coupled_ssm_dir = r'{}/coupled_ssm/{}'.format(os.getcwd(), self.ssm_name_bones_incl)
         else:
             self.ssm_name_bones_incl = 'pel_fem_tib_fib_pat' if self.include_patella else 'pel_fem_tib_fib'
-            self.coupled_ssm_dir = r'{}/coupled_ssm/{}_both_side'.format(os.getcwd(), self.ssm_name_bones_incl)
+            self.coupled_ssm_dir = r'{}/coupled_ssm/{}_both_side'.format(os.path.dirname(os.getcwd()), self.ssm_name_bones_incl)
 
         self.coupled_pcs = None
         self.ssm_pc_file = None
@@ -41,7 +41,7 @@ class SSMHandler:
         self.ssm_regions_node_nrs_femur = {}
         self.ssm_regions_node_nrs_tibiafibula = {}
 
-        self.ssm_regions_dir = '{}/coupled_ssm_regions_local'.format(os.getcwd())
+        self.ssm_regions_dir = '{}/src/articulated_ssm_both_sides/coupled_ssm_regions_local'.format(os.path.dirname(os.getcwd()))
         self.ssm_lm_node_nrs_pelvis['left'] = \
             read_lm_node_nrs_from_txt(
                 r'{}/pelvis/local_landmark_node_nrs_left.txt'.format(self.ssm_regions_dir))
