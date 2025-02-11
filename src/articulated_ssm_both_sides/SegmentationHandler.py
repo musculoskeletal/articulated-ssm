@@ -68,7 +68,7 @@ class SegmentationHandler:
                     _key_in_left = False
                 if _key_in_left:
                     rmse_list.append(calculate_rmse_segmentation_to_fitted_per_bone(fitted_vertices,
-                                                                           self.segmentations[key].v))
+                                                                                    self.segmentations[key].v))
             if not _key_in_left:
                 if ll_model.side == 'right' or ll_model.side == 'both':
                     _key_in_right = True
@@ -84,7 +84,7 @@ class SegmentationHandler:
                         _key_in_right = False
                     if _key_in_right:
                         rmse_list.append(calculate_rmse_segmentation_to_fitted_per_bone(fitted_vertices,
-                                                                               self.segmentations[key].v))
+                                                                                        self.segmentations[key].v))
 
         rmse = np.average(rmse_list)
         return rmse

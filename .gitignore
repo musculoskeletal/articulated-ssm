@@ -6,6 +6,9 @@ __pycache__/
 coupled_ssm/
 code_single_side_hemi/
 
+# Test outputs
+test/_output
+
 # Project files
 .idea/
 

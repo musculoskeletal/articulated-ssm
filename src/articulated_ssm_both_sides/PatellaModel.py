@@ -26,7 +26,7 @@ class PatellaModel:
     def update_landmarks_and_regions(self):
         for landmark_name in self.landmark_names:
             self.landmark_coords[self.side].update({
-                landmark_name: self.node_coords[self.landmark_node_nrs[self.side][landmark_name],:]})
+                landmark_name: self.node_coords[self.landmark_node_nrs[self.side][landmark_name], :]})
 
     def update_acs(self):
 

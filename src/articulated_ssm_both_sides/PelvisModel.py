@@ -19,14 +19,14 @@ class PelvisModel:
                                           'PSIS_VERTEX'
                                           ])
 
-        self.bone_names = dict(left=['Pel_L','Pel_R'], right=['Pel_L','Pel_R'])
+        self.bone_names = dict(left=['Pel_L', 'Pel_R'], right=['Pel_L', 'Pel_R'])
 
         self.landmark_node_nrs = ssm_handler.ssm_lm_node_nrs_pelvis
 
         self.node_coords = None
         self.node_coords_pel_l = None
         self.node_coords_pel_r = None
-        #self.node_coords_sac = None
+        # self.node_coords_sac = None
         # self.node_coords = None
         self.landmark_coords = dict(left={}, right={})
         self.region_coords = dict(left={}, right={})

@@ -4,7 +4,7 @@ from gias3.common import transform3D
 from numpy.linalg import inv
 from scipy import optimize
 
-import SaveMesh
+from articulated_ssm_both_sides import SaveMesh
 
 
 class FitASM:
@@ -57,24 +57,24 @@ class FitASM:
                 hip_rot_x_index_R = knee_rot_x_index_L + self.N_PARAMS_HIP
                 knee_rot_x_index_R = hip_rot_x_index_R + self.N_PARAMS_KNEE
 
-                x_split = [x[:pc_weights_index_L],  # pc weights left side
-                           x[pc_weights_index_L:pc_weights_index_R],  # pc weights right side
-                           x[pc_weights_index_R:pel_rigid_index_L],   # init rigid pelvis L
-                           x[pel_rigid_index_L:pel_rigid_index_R],  # init rigid pelvis L
-                           x[pel_rigid_index_R:hip_rot_x_index_L],  # hip left
-                           x[hip_rot_x_index_L:knee_rot_x_index_L],  # knee left
-                           x[knee_rot_x_index_L:hip_rot_x_index_R],  # hip right
-                           x[hip_rot_x_index_R:]]  # knee right
+                x_split = [x[:pc_weights_index_L],                      # pc weights left side
+                           x[pc_weights_index_L:pc_weights_index_R],    # pc weights right side
+                           x[pc_weights_index_R:pel_rigid_index_L],     # init rigid pelvis L
+                           x[pel_rigid_index_L:pel_rigid_index_R],      # init rigid pelvis L
+                           x[pel_rigid_index_R:hip_rot_x_index_L],      # hip left
+                           x[hip_rot_x_index_L:knee_rot_x_index_L],     # knee left
+                           x[knee_rot_x_index_L:hip_rot_x_index_R],     # hip right
+                           x[hip_rot_x_index_R:]]                       # knee right
 
             else:
                 hip_rigid_x_index = len(pc_modes_it)
                 hip_rot_x_index = hip_rigid_x_index + self.N_PARAMS_PELVIS
                 knee_rot_x_index = hip_rot_x_index + self.N_PARAMS_HIP
 
-                x_split = [x[:hip_rigid_x_index],  # pc weights
-                           x[hip_rigid_x_index:hip_rot_x_index],  # init rigid pelvis
-                           x[hip_rot_x_index:knee_rot_x_index],  # hip left
-                           x[knee_rot_x_index:]]  # knee left
+                x_split = [x[:hip_rigid_x_index],                   # pc weights
+                           x[hip_rigid_x_index:hip_rot_x_index],    # init rigid pelvis
+                           x[hip_rot_x_index:knee_rot_x_index],     # hip left
+                           x[knee_rot_x_index:]]                    # knee left
             return x_split
 
         def objective_function(x):
@@ -116,7 +116,7 @@ class FitASM:
                     target_lms_list, source_lms_list = self.fit_data[
                         'landmark_handler_r'].obtain_landmark_lists_from_dict()
                 # calc sum of squared distance between target and source landmarks
-                ssdist = ((((np.asarray(target_lms_list) - np.asarray(source_lms_list)))) ** 2.0).sum()  # in mm
+                ssdist = ((np.asarray(target_lms_list) - np.asarray(source_lms_list)) ** 2.0).sum()  # in mm
                 # print('ssdist = {}mm'.format(ssdist))
                 landmark_dist = \
                     np.linalg.norm((np.asarray(target_lms_list) - np.asarray(source_lms_list)), axis=1)
@@ -185,7 +185,7 @@ class FitASM:
                                        self.pred_path, self.side)
             opt_landmark_dist = \
                 np.linalg.norm((np.asarray(opt_target_lms_list) - np.asarray(opt_source_lms_list)), axis=1)
-            opt_ssdist = ((opt_landmark_dist) ** 2).sum()
+            opt_ssdist = (opt_landmark_dist ** 2).sum()
             mae = np.mean(opt_landmark_dist)
             opt_landmark_rmse = np.sqrt(np.mean(opt_landmark_dist ** 2.0))
             opt_mahalanobis_dist = np.sqrt((xopt1_split[0] ** 2.0).sum())

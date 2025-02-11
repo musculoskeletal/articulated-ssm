@@ -4,7 +4,7 @@ from gias3.common import math
 
 CORRECT_FOR_SKIN_PADDING_AND_MARKER_RADIUS = False
 SKIN_PADDING = 5
-MARKER_RADIUS = 9 # 7mm marker radius + 2mm marker plate
+MARKER_RADIUS = 9   # 7mm marker radius + 2mm marker plate
 
 
 def correct_target_markers(target_markers_per_bone, side):
@@ -132,6 +132,7 @@ def correct_target_markers(target_markers_per_bone, side):
                 else:
                     print('Error in skin padding and marker radius correction')
 
+
 def correct_target_markers_no_med(target_markers_per_bone, side_m):
     """Correct the target marker location using the marker radius and skin padding
     target_markers_per_bone [dict]: Dictionary with the bones, marker_names and coordinates of each target marker per
@@ -221,20 +222,3 @@ def correct_target_markers_no_med(target_markers_per_bone, side_m):
                         ml_axis * (MARKER_RADIUS + SKIN_PADDING)
                 else:
                     print('Error in skin padding and marker radius correction')
-
-    #if plot:
-     #   v = fieldvi.FieldVi()
-      #  lms = []
-       # lms_original = []
-        #for bone in target_markers_per_bone.keys():
-         #   for side in target_markers_per_bone[bone].keys():
-          #      for lm in target_markers_per_bone[bone][side].keys():
-           #         lms.append(target_markers_per_bone[bone][side][lm])
-            #        lms_original.append(original_target_markers_per_bone[bone][side][lm])
-        #v.addData('target_lms_original',
-        #          np.asarray(lms_original),
-        #          render_args={'mode': 'sphere', 'scale_factor': 10.0, 'color': (0, 0, 1)})
-        #v.addData('target_lms',
-        #          np.asarray(lms),
-        #          render_args={'mode': 'sphere', 'scale_factor': 10.0, 'color': (0, 1, 0)})
-        #v.configure_traits()

@@ -1,97 +1,92 @@
 # Main articulated SSM model fitting script
 # 25/01/2023
 
-from LowerLimb import LowerLimb as LowerLimb
-import numpy as np
 import os
-import LandmarkHandler
-import SegmentationHandler
-import FitASM_2 as FitASM
-import time
-import PLSR
+import numpy as np
 
-startTime = time.time()
-general_fit_settings = {'segm_fit': False,                           # Fit using segmentation data
-                        'lm_fit': True,                            # Fit using landmark coordinates
-                        'side': 'both',                             # Either 'left', 'right' or 'both'
-                        'include_patella': False,                    # Include patella
-                        'patella_shift': np.array([50, 50, -10]),
-                        'pc_modes': [[0],[0,1,2,3]], #, [[0,1],[0, 1, 2, 3, 4]],      # PC modes to fit (multi fit: [[],[]])
-                        'mweight': [1,0.0001], #[1, 0.01],                        # Mahalanobis weight (multi fit: [float, float])
-                        'min_args': {'method': 'Powell'},#{'method': 'BFGS','jac': False,'bounds': None, 'tol': 1e-6,'options': {'eps': 1e-5}},
-                                    #{'method': 'Powell'},           # scipy.optimize minimisation algorithm
-                        'name': 'test_fit',
-                        'knee_gap': 5,                               # Minimal gap between femur and tibia knee nodes
-                        'knee_fixed': False,                          # Fix the knee in initial position (0)
-                        'allow_knee_adduction_dof': True,            # Allow rotation in VV when placing tibia-fibula
-                        'allow_knee_adduction_correction': True,     # Allow VV rotation to obtain minimal knee gap
-                        'ssm_name': 'shape_model',
-                        'pred_path': 'RCH05',
-                        'x0': None,                                  # Initial parameters for the 1st fit
-                        'init_pc_weights': None,                      # Initial weights for each mode in the first fit.
-                        'correct_markers': True,                     # if motion capture markers are used for prediction: True
-                        'LOO': False,                                # if a leave one out analysis is being conducted
-                        'PLSR': False,                                  # if a partial least squares regression is being conducted to provide an initial guess to the shape model
-                        'case_name': 'RCH05'
-                        }
+from articulated_ssm_both_sides.FitASM_2 import FitASM
+from articulated_ssm_both_sides.LandmarkHandler import LandmarkHandler
+from articulated_ssm_both_sides.SegmentationHandler import SegmentationHandler
+from articulated_ssm_both_sides.LowerLimb import LowerLimb
+from articulated_ssm_both_sides.PLSR import plsr
 
-# load the coupled SSM
-#ssm_handler = SSMHandler.SSMHandler(general_fit_settings, 0)
-anthro_data_path = r'{}/target_landmarks/Left_side_all_predictive_factors.csv'.format(os.getcwd())
-pred_path = '{}/pred_meshes/{}'.format(os.getcwd(),general_fit_settings['pred_path'])
-if not os.path.exists(pred_path):
-    os.makedirs(pred_path)
-errors_path = '{}/pred_meshes/{}/{}_lm_errors.txt'.format(os.getcwd(),general_fit_settings['pred_path'],general_fit_settings['ssm_name'])
-case_data = np.array([133,313.6,159.4,297.2]) #height,ASIS width,fem length,tib length
-if os.path.exists(errors_path):
-    os.remove(errors_path)
-errors = open(errors_path, 'w+')
-errors.write('mae_lm,rmse_lm,mweight\n')
-# Generate lower limb model
-test_model = LowerLimb(general_fit_settings)
 
-if general_fit_settings['PLSR'] == True:
-    pred_weights, pred_sd = PLSR.plsr(case_data, anthro_data_path, general_fit_settings)
+general_fit_settings = {
+    'segm_fit': False,                          # Fit using segmentation data
+    'lm_fit': True,                             # Fit using landmark coordinates
+    'include_patella': False,                   # Include patella
+    'patella_shift': np.array([50, 50, -10]),
+    'pc_modes': [[0], [0, 1, 2, 3]],            # , [[0,1],[0, 1, 2, 3, 4]],    # PC modes to fit (multi fit: [[],[]])
+    'mweight': [1, 0.0001],                     # [1, 0.01],                    # Mahalanobis weight (multi fit: [float, float])
+    'min_args': {'method': 'Powell'},           # {'method': 'BFGS','jac': False,'bounds': None, 'tol': 1e-6,'options': {'eps': 1e-5}},
+    'knee_gap': 5,                              # Minimal gap between femur and tibia knee nodes
+    'knee_fixed': False,                        # Fix the knee in initial position (0)
+    'allow_knee_adduction_dof': True,           # Allow rotation in VV when placing tibia-fibula
+    'allow_knee_adduction_correction': True,    # Allow VV rotation to obtain minimal knee gap
+    'x0': None,                                 # Initial parameters for the 1st fit
+    'init_pc_weights': None,                    # Initial weights for each mode in the first fit.
+    'correct_markers': True,                    # if motion capture markers are used for prediction: True
+    'PLSR': False,                              # if a partial least squares regression is used to provide an initial guess to shape model
+    }
+
+
+def run_asm(marker_data, output_directory):
+    """
+    Main entry point for ASM fitting process. Takes a dictionary containing the landmark positions
+    defining a single TRC frame.
+
+    :param marker_data: A dictionary containing the landmark positions defining a single TRC frame.
+    :param output_directory: The path to the directory where the mesh files should be saved.
+    """
+
+    # Generate and load lower limb model.
+    lower_limb_model = LowerLimb(general_fit_settings)
+    lower_limb_model.ll_l.load_bones_and_model()
+    lower_limb_model.ll_r.load_bones_and_model()
+
+    # Load landmark coordinates data to fit to.
+    fit_data = landmark_fit(lower_limb_model, marker_data)
+
+    asm_fitter_l = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'left')
+    asm_fitter_r = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'right')
+
+    write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory)
+
+
+def landmark_fit(lower_limb_model, marker_data):
+    landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
+
+    fit_data = {}
+    for side in ['left', 'right']:
+        fit_data[f'landmark_handler_{side[0]}'] = LandmarkHandler(
+            marker_data, landmark_names_to_fit, lower_limb_model, general_fit_settings['correct_markers'], side
+        )
+
+    return fit_data
+
+
+def segmentation_fit(segmentations_directory):
+    segmentation_handler = SegmentationHandler(segmentations_directory, general_fit_settings)
+    fit_data = {'segmentation_handler': segmentation_handler}
+
+    return fit_data
+
+
+def plsr_fit(anthro_data_path, case_data):
+    """
+    `case_data` should be a numpy array containing the values: 'height', ASIS width, femur length, tibia length.
+    """
+    pred_weights, pred_sd = plsr(case_data, anthro_data_path, general_fit_settings)
     if isinstance(general_fit_settings['pc_modes'][0], (list, tuple, np.ndarray)):
         general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes'][-1]))]
     else:
         general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes']))]
         print(general_fit_settings['init_pc_weights'])
 
-if general_fit_settings['side'] == 'both':
-    test_model.ll_l.load_bones_and_model()
-    test_model.ll_r.load_bones_and_model()
-if general_fit_settings['side'] == 'left':
-    test_model.ll_l.load_bones_and_model()
-if general_fit_settings['side'] == 'right':
-    test_model.ll_r.load_bones_and_model()
 
-# Initialize data for minimisation
-fit_data = {}  # Dictionary with data to fit the ASM to
-
-# load segmentation data to fit to
-if general_fit_settings['segm_fit']:
-    segmentations_dir = r'{}/segmentations'.format(os.getcwd())
-    segmentation_handler = SegmentationHandler.SegmentationHandler(segmentations_dir, general_fit_settings)
-    fit_data['segmentation_handler'] = segmentation_handler
-
-# load landmark coordinates data to fit to
-if general_fit_settings['lm_fit']:
-    target_lms_file = r'{}/target_landmarks/{}_landmarks_mocap.txt'.format(os.getcwd(), general_fit_settings['case_name'])
-    landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
-    landmark_handler_l = LandmarkHandler.LandmarkHandler(target_lms_file, landmark_names_to_fit, test_model, general_fit_settings['correct_markers'], 'left')
-    fit_data['landmark_handler_l'] = landmark_handler_l
-    landmark_handler_r = LandmarkHandler.LandmarkHandler(target_lms_file, landmark_names_to_fit, test_model,
-                                                         general_fit_settings['correct_markers'], 'right')
-    fit_data['landmark_handler_r'] = landmark_handler_r
-
-# Fit articulated SSM
-asm_fitter_l = FitASM.FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'left')
-errors.write(str(asm_fitter_l.mae_lm)+','+str(asm_fitter_l.rmse_lm)+','+str(asm_fitter_l.opt_mweight)+'\n')
-exectutionTime = (time.time() - startTime)
-print('Execution time in seconds: ' + str(exectutionTime))
-
-asm_fitter_r = FitASM.FitASM(test_model, general_fit_settings, fit_data, general_fit_settings['case_name'], 'right')
-errors.write(str(asm_fitter_r.mae_lm)+','+str(asm_fitter_r.rmse_lm)+','+str(asm_fitter_r.opt_mweight)+'\n')
-exectutionTime = (time.time() - startTime)
-print('Execution time in seconds: ' + str(exectutionTime))
+def write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory):
+    metrics_path = os.path.join(output_directory, "asm_fit_metrics.txt")
+    with open(metrics_path, "w") as metrics_file:
+        metrics_file.write("MAE, RMSE, m_weight\n")
+        metrics_file.write(f"{asm_fitter_l.mae_lm}, {asm_fitter_l.rmse_lm}, {asm_fitter_l.opt_mweight}\n")
+        metrics_file.write(f"{asm_fitter_r.mae_lm}, {asm_fitter_r.rmse_lm}, {asm_fitter_r.opt_mweight}\n")
