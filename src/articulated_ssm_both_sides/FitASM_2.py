@@ -121,7 +121,6 @@ class FitASM:
                     np.linalg.norm((np.asarray(target_lms_list) - np.asarray(source_lms_list)), axis=1)
                 mae = np.mean(landmark_dist)
                 rmse = np.sqrt(np.mean(landmark_dist ** 2.0))  # in mm
-                print('rmse = {}mm'.format(rmse))
                 # total_error = ssdist + m2
                 total_error = rmse + m2
                 # print('m2:', m2)
