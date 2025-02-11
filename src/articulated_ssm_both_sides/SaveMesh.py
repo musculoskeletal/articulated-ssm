@@ -14,13 +14,14 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
 
     if side == 'left':
         model = ll_model.ll_l
+        node_coords_pel = model.pelvis_model.node_coords_pel_l
     elif side == 'right':
         model = ll_model.ll_r
+        node_coords_pel = model.pelvis_model.node_coords_pel_r
 
     if model.include_patella == 1:
         node_coords_pat = model.patella_model.node_coords
 
-    node_coords_pel = model.pelvis_model.node_coords_pel_l
     node_coords_fem = model.femur_model.node_coords
     node_coords_tib = model.tibfib_model.node_coords
 
