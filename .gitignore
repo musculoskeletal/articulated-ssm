@@ -3,7 +3,6 @@ __pycache__/
 *.py[cod]
 
 # SSM
-coupled_ssm/
 code_single_side_hemi/
 
 # Test outputs
