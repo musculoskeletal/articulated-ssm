@@ -152,23 +152,27 @@ class SSMHandler:
         mesh.v = node_coords
         return mesh
 
-    def create_mesh_each_bone(self, pel_nodes, fem_nodes, tib_nodes):
+    def create_mesh_each_bone(self, pel_nodes, fem_nodes, tib_nodes, fib_nodes):
         pel_mesh = simplemesh.SimpleMesh()
         pel_mesh.v = pel_nodes
         fem_mesh = simplemesh.SimpleMesh()
         fem_mesh.v = fem_nodes
         tib_mesh = simplemesh.SimpleMesh()
         tib_mesh.v = tib_nodes
+        fib_mesh = simplemesh.SimpleMesh()
+        fib_mesh.v = fib_nodes
 
         if self.side == 'left':
             fem_mesh.f = self.ssm_faces_split_per_bone["Fem_L"]
             pel_mesh.f = self.ssm_faces_split_per_bone["Pel_L"]
             tib_mesh.f = self.ssm_faces_split_per_bone["Tib_L"]
+            fib_mesh.f = self.ssm_faces_split_per_bone["Fib_L"]
         else:
             fem_mesh.f = self.ssm_faces_split_per_bone["Fem_R"]
             pel_mesh.f = self.ssm_faces_split_per_bone["Pel_R"]
             tib_mesh.f = self.ssm_faces_split_per_bone["Tib_R"]
-        return pel_mesh, fem_mesh, tib_mesh
+            fib_mesh.f = self.ssm_faces_split_per_bone["Fib_R"]
+        return pel_mesh, fem_mesh, tib_mesh, fib_mesh
 
 
 # ----------------------------------------------------------------------------------------------------------------------

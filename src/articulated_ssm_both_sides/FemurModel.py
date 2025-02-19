@@ -5,7 +5,7 @@ import numpy as np
 
 
 class FemurModel:
-    def __init__(self, ssm_handler, general_fit_settings, side):
+    def __init__(self, ssm_handler, side):
         self.name = 'Femur'
         self.side = side
         self.ssm_handler = ssm_handler
