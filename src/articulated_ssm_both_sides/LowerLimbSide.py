@@ -24,8 +24,8 @@ class LowerLimbSide:
                                 [0] * self.N_PARAMS_KNEE]       # knee_rot
 
         self.pelvis_model = PelvisModel(ssm_handler, general_fit_settings, side)
-        self.femur_model = FemurModel(ssm_handler, general_fit_settings, side)
-        self.tibfib_model = TibiaFibulaModel(ssm_handler, general_fit_settings, side)
+        self.femur_model = FemurModel(ssm_handler, side)
+        self.tibfib_model = TibiaFibulaModel(ssm_handler, side)
         if self.include_patella:
             self.patella_model = PatellaModel(ssm_handler, general_fit_settings, side)
 
@@ -229,22 +229,37 @@ class LowerLimbSide:
             o, flex, rot, abd = self.get_knee_acs()
 
             # apply knee rotations: flexion(femur-z)
-            self.tibfib_model.node_coords = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords,
+            self.tibfib_model.node_coords_tib = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords_tib,
                                                                                  self.direction_parameters[self.side]
                                                                                  ['knee_flex_coeff'] * knee_rot[0],
                                                                                  o,
                                                                                  o + flex)
+            self.tibfib_model.node_coords_fib = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords_fib,
+                                                                                     self.direction_parameters[
+                                                                                         self.side]
+                                                                                     ['knee_flex_coeff'] * knee_rot[0],
+                                                                                     o,
+                                                                                     o + flex)
+            self.tibfib_model.node_coords = np.vstack((self.tibfib_model.node_coords_fib,self.tibfib_model.node_coords_tib))
             self.tibfib_model.update_landmarks_and_regions()
             self.tibfib_model.update_acs()
 
             # apply knee rotation: adduction(floating x)
             if self.allow_knee_adduction_dof:
-                self.tibfib_model.node_coords = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords,
+                self.tibfib_model.node_coords_tib = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords_tib,
                                                                                      self.direction_parameters
                                                                                      [self.side]['knee_add_coeff']
                                                                                      * knee_rot[1],
                                                                                      o,
                                                                                      o + abd)
+                self.tibfib_model.node_coords_fib = transform3D.transformRotateAboutAxis(
+                    self.tibfib_model.node_coords_fib,
+                    self.direction_parameters
+                    [self.side]['knee_add_coeff']
+                    * knee_rot[1],
+                    o,
+                    o + abd)
+                self.tibfib_model.node_coords = np.vstack((self.tibfib_model.node_coords_fib, self.tibfib_model.node_coords_tib))
                 self.tibfib_model.update_landmarks_and_regions()
                 self.tibfib_model.update_acs()
 
@@ -277,7 +292,9 @@ class LowerLimbSide:
 
         t = transform3D.directAffine(cs_source, cs_targ)
 
-        self.tibfib_model.node_coords = transform3D.transformAffine(self.tibfib_model.node_coords, t)
+        self.tibfib_model.node_coords_tib = transform3D.transformAffine(self.tibfib_model.node_coords_tib, t)
+        self.tibfib_model.node_coords_fib = transform3D.transformAffine(self.tibfib_model.node_coords_fib, t)
+        self.tibfib_model.node_coords = np.vstack((self.tibfib_model.node_coords_fib, self.tibfib_model.node_coords_tib))
         self.tibfib_model.update_landmarks_and_regions()
         self.tibfib_model.update_acs()
 
@@ -291,7 +308,9 @@ class LowerLimbSide:
         current_knee_gap = self.calc_knee_gap()
         knee_shift = current_knee_gap - self.knee_gap
         shift_t = knee_shift * self.tibfib_model.acs.y
-        self.tibfib_model.node_coords = self.tibfib_model.node_coords + shift_t
+        self.tibfib_model.node_coords_tib = self.tibfib_model.node_coords_tib + shift_t
+        self.tibfib_model.node_coords_fib = self.tibfib_model.node_coords_fib + shift_t
+        self.tibfib_model.node_coords = np.vstack((self.tibfib_model.node_coords_fib, self.tibfib_model.node_coords_tib))
         self.tibfib_model.update_landmarks_and_regions()
         self.tibfib_model.update_acs()
 
@@ -309,10 +328,16 @@ class LowerLimbSide:
         varus_angle = self.calc_varus_angle(femur_tree)[0]
 
         floating_x = math.norm(np.cross(self.tibfib_model.acs.y, self.femur_model.acs.z))
-        self.tibfib_model.node_coords = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords,
+        self.tibfib_model.node_coords_tib = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords_tib,
                                                                              -varus_angle,
                                                                              self.femur_model.acs.o,
                                                                              self.femur_model.acs.o + floating_x)
+        self.tibfib_model.node_coords_fib = transform3D.transformRotateAboutAxis(self.tibfib_model.node_coords_fib,
+                                                                                 -varus_angle,
+                                                                                 self.femur_model.acs.o,
+                                                                                 self.femur_model.acs.o + floating_x)
+        self.tibfib_model.node_coords = np.vstack(
+            (self.tibfib_model.node_coords_fib, self.tibfib_model.node_coords_tib))
 
         self.tibfib_model.update_landmarks_and_regions()
         self.tibfib_model.update_acs()

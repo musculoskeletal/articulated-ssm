@@ -23,7 +23,8 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
         node_coords_pat = model.patella_model.node_coords
 
     node_coords_fem = model.femur_model.node_coords
-    node_coords_tib = model.tibfib_model.node_coords
+    node_coords_tib = model.tibfib_model.node_coords_tib
+    node_coords_fib = model.tibfib_model.node_coords_fib
 
     hjc = model.pelvis_model.acetabulum_origin[side]
     condyle_lat = model.tibfib_model.landmark_coords[side]['condyle_lat']
@@ -32,11 +33,12 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
     target_lms_save = np.copy(target_lms[:-2])
     source_lms_save = np.copy(source_lms[:-2])
     source_lms_save = np.concatenate((source_lms_save, np.asarray([hjc]), np.asarray([condyle_lat]), np.asarray([condyle_med])), axis=0)
-    bone_mesh_pel, bone_mesh_fem, bone_mesh_tib = model.ssm_handler.create_mesh_each_bone(node_coords_pel, node_coords_fem, node_coords_tib)
+    bone_mesh_pel, bone_mesh_fem, bone_mesh_tib, bone_mesh_fib = model.ssm_handler.create_mesh_each_bone(node_coords_pel, node_coords_fem, node_coords_tib, node_coords_fib)
 
     output_pel = os.path.join(output_directory, f'predicted_mesh_{side}_pelvis.stl')
     output_fem = os.path.join(output_directory, f'predicted_mesh_{side}_femur.stl')
-    output_tib = os.path.join(output_directory, f'predicted_mesh_{side}_tibfib.stl')
+    output_tib = os.path.join(output_directory, f'predicted_mesh_{side}_tibia.stl')
+    output_fib = os.path.join(output_directory, f'predicted_mesh_{side}_fibula.stl')
     pred_lms = os.path.join(output_directory, f'predicted_lms_{side}.txt')
     orig_lms = os.path.join(output_directory, f'orignial_lms_{side}.txt')
     x_opt = os.path.join(output_directory, f'x_opt_{side}.txt')
@@ -61,3 +63,5 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
     pred_mesh_fem.write()
     pred_mesh_tib = vtktools.Writer(filename=output_tib, v=bone_mesh_tib.v, f=bone_mesh_tib.f)
     pred_mesh_tib.write()
+    pred_mesh_fib = vtktools.Writer(filename=output_fib, v=bone_mesh_fib.v, f=bone_mesh_fib.f)
+    pred_mesh_fib.write()
