@@ -3,7 +3,22 @@ import os
 import pandas as pd
 from gias3.learning import PCA
 from sklearn.cross_decomposition import PLSRegression
+import joblib
 
+
+def rf_predict(predictors, model, weights):
+    '''
+    using a sklearn random forest algorithm saved as a pkl file, predict the response from the given model
+    '''
+    pred = predictors.reshape(1,-1)
+    model = joblib.load(model)
+    prediction = (model.predict(pred)).squeeze()
+    # convert to sd not absolute weight
+    init_pc_weights = np.zeros(len(prediction))
+    for j in range(len(prediction)):
+        init_pc_weights[j] = prediction[j] / np.sqrt(weights[j])
+    print(init_pc_weights)
+    return init_pc_weights
 
 def plsr(case_data, anthro_data, general_fit_settings):
     """
@@ -32,13 +47,14 @@ def plsr(case_data, anthro_data, general_fit_settings):
     np.set_printoptions(threshold=np.inf)
 
     P = pd.read_csv(anthro_data, header=None)
-    predictors_train = P.iloc[:, [0, 2, 6, 7, 11]].copy()   # columns of anthro data you want to use for prediction
-    predictors_train.drop([0], axis=0, inplace=True)        # remove case name
+    predictors_train = P.iloc[:, [0, 2, 6, 7, 11]].copy()  # columns of anthro data you want to use for prediction
+    predictors_train.drop([0], axis=0, inplace=True)  # remove case name
 
     ssm_name = general_fit_settings['ssm_name']
     side = general_fit_settings['side']
     ssm_name_bones_incl = 'pel_fem_tib_fib'
-    coupled_ssm_dir = r'{}/coupled_ssm/{}_{}_side'.format(os.getcwd(), ssm_name_bones_incl, side)   # directory of your ssm
+    coupled_ssm_dir = r'{}/coupled_ssm/{}_{}_side'.format(os.getcwd(), ssm_name_bones_incl,
+                                                          side)  # directory of your ssm
     ssm_pc_file = r'{}/{}.pc.npz'.format(coupled_ssm_dir, ssm_name)
     coupled_pcs = PCA.loadPrincipalComponents(ssm_pc_file)
     # Load files of principal component weightings of the mesh
@@ -50,8 +66,8 @@ def plsr(case_data, anthro_data, general_fit_settings):
 
     pls2 = PLSRegression(scale=True)
     pls2.fit(predictors_train, Y)  # where Z = training vectors and Y = target vectors
-    pred_weights = np.zeros((len(Y)-1))
-    pred_sd = np.zeros((len(Y)-1))
+    pred_weights = np.zeros((len(Y) - 1))
+    pred_sd = np.zeros((len(Y) - 1))
 
     # Apply PLSR
     pred_weights = pls2.predict([case_data])[0]
@@ -111,7 +127,7 @@ def plsr_loo(bone_names, anthro_data, ssm_path, general_fit_settings):
     for i in range(len(bone_names)):
         test_case = predictors.iloc[[i]]  # anthro measurements of current bone
         Z = predictors.drop([predictors.index[i]])
-        coupled_ssm_dir = os.path.join(validation_path+str(i)+'.pc.npz')
+        coupled_ssm_dir = os.path.join(validation_path + str(i) + '.pc.npz')
         coupled_pcs = PCA.loadPrincipalComponents(coupled_ssm_dir)
         # Load files of principal component weightings of the mesh
         Y = coupled_pcs.projectedWeights
@@ -177,21 +193,21 @@ def plsr_train_test(test_set, train_set, anthro_data, general_fit_settings):
 
     for case in predictors_test.iloc[:, 0]:
         if case in test_set:
-            j = j+1
+            j = j + 1
             continue
         else:
             predictors_test.drop([predictors_test.index[j]], axis=0, inplace=True)
-            j = j-1
-        j = j+1
+            j = j - 1
+        j = j + 1
     predictors_test.drop([0], axis=1, inplace=True)
 
     pls2 = PLSRegression(scale=True)
     pls2.fit(predictors_train, Y)  # where Z = training vectors and Y = target vectors
-    pred_weights = np.zeros((len(Y)-1, len(test_set)))
-    pred_sd = np.zeros((len(Y)-1, len(test_set)))
+    pred_weights = np.zeros((len(Y) - 1, len(test_set)))
+    pred_sd = np.zeros((len(Y) - 1, len(test_set)))
     pred_sd_2 = np.zeros((len(Y) - 1, len(test_set)))
     for i in range(len(test_set)):
-        test_case = predictors_test.iloc[[i]]   # anthro measurements of current bone
+        test_case = predictors_test.iloc[[i]]  # anthro measurements of current bone
         # Apply PLSR
         pred_weights[:, i] = pls2.predict(test_case)
         for j in range(len(pred_weights)):

@@ -8,29 +8,29 @@ from articulated_ssm_both_sides.FitASM_2 import FitASM
 from articulated_ssm_both_sides.LandmarkHandler import LandmarkHandler
 from articulated_ssm_both_sides.SegmentationHandler import SegmentationHandler
 from articulated_ssm_both_sides.LowerLimb import LowerLimb
-from articulated_ssm_both_sides.PLSR import plsr
-
+from articulated_ssm_both_sides.PLSR import rf_predict
 
 general_fit_settings = {
-    'segm_fit': False,                          # Fit using segmentation data
-    'lm_fit': True,                             # Fit using landmark coordinates
-    'include_patella': False,                   # Include patella
+    'segm_fit': False,  # Fit using segmentation data
+    'lm_fit': True,  # Fit using landmark coordinates
+    'include_patella': False,  # Include patella
     'patella_shift': np.array([50, 50, -10]),
-    'pc_modes': [[0], [0, 1, 2, 3]],            # , [[0,1],[0, 1, 2, 3, 4]],    # PC modes to fit (multi fit: [[],[]])
-    'mweight': [1, 0.0001],                     # [1, 0.01],                    # Mahalanobis weight (multi fit: [float, float])
-    'min_args': {'method': 'Powell'},           # {'method': 'BFGS','jac': False,'bounds': None, 'tol': 1e-6,'options': {'eps': 1e-5}},
-    'knee_gap': 5,                              # Minimal gap between femur and tibia knee nodes
-    'knee_fixed': False,                        # Fix the knee in initial position (0)
-    'allow_knee_adduction_dof': True,           # Allow rotation in VV when placing tibia-fibula
-    'allow_knee_adduction_correction': True,    # Allow VV rotation to obtain minimal knee gap
-    'x0': None,                                 # Initial parameters for the 1st fit
-    'init_pc_weights': None,                    # Initial weights for each mode in the first fit.
-    'correct_markers': True,                    # if motion capture markers are used for prediction: True
-    'PLSR': False,                              # if a partial least squares regression is used to provide an initial guess to shape model
-    }
+    'pc_modes': [[0], [0, 1, 2, 3]],  # , [[0,1],[0, 1, 2, 3, 4]],    # PC modes to fit (multi fit: [[],[]])
+    'mweight': [1, 0.0001],  # [1, 0.01],                    # Mahalanobis weight (multi fit: [float, float])
+    'min_args': {'method': 'Powell', 'options': {'xtol': 1e-3, 'ftol': 1e-3, 'maxiter': 100, 'disp': True}},
+    # {'method': 'BFGS','jac': False,'bounds': None, 'tol': 1e-6,'options': {'eps': 1e-5}},
+    'knee_gap': 5,  # Minimal gap between femur and tibia knee nodes
+    'knee_fixed': False,  # Fix the knee in initial position (0)
+    'allow_knee_adduction_dof': True,  # Allow rotation in VV when placing tibia-fibula
+    'allow_knee_adduction_correction': True,  # Allow VV rotation to obtain minimal knee gap
+    'x0': None,  # Initial parameters for the 1st fit
+    'init_pc_weights': None,  # Initial weights for each mode in the first fit.
+    'correct_markers': True,  # if motion capture markers are used for prediction: True
+    'PLSR': False,  # if a partial least squares regression is used to provide an initial guess to shape model
+}
 
 
-def run_asm(marker_data, output_directory):
+def run_asm(marker_data, output_directory, demo_factors):
     """
     Main entry point for ASM fitting process. Takes a dictionary containing the landmark positions
     defining a single TRC frame.
@@ -47,8 +47,17 @@ def run_asm(marker_data, output_directory):
     # Load landmark coordinates data to fit to.
     fit_data = landmark_fit(lower_limb_model, marker_data)
 
-    asm_fitter_l = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'left')
-    asm_fitter_r = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'right')
+    # Produce an initial guess for the pc weights to bound the model
+    # need to add verification here that all demo factors are present
+    pc_pred_l = rf_predict(demo_factors[[0, 1, 3, 4, 5, 6, 7]],
+                           r'{}/rf_files/rf_model_PC_left_side.pkl'.format(os.path.dirname(__file__)),
+                           lower_limb_model.ll_l.ssm_handler.coupled_pcs.weights)
+    pc_pred_r = rf_predict(demo_factors[[0, 1, 3, 4, 5, 8]],
+                           r'{}/rf_files/rf_model_PC_right_side.pkl'.format(os.path.dirname(__file__)),
+                           lower_limb_model.ll_r.ssm_handler.coupled_pcs.weights)
+
+    asm_fitter_l = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'left', pc_pred_l)
+    asm_fitter_r = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'right', pc_pred_r)
 
     write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory)
 

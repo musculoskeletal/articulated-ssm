@@ -11,7 +11,7 @@ SKIN_PADDING_MEC = 16
 SKIN_PADDING_LMAL = 3
 SKIN_PADDING_MMAL = 5
 
-MARKER_RADIUS = 9   # 7mm marker radius + 2mm marker plate
+MARKER_RADIUS = 0   # 7mm marker radius + 2mm marker plate
 
 def normaliseVector(v):
     return v / np.linalg.norm(v)
