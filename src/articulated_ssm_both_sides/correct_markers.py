@@ -1,22 +1,26 @@
 import numpy as np
 from copy import deepcopy
 from gias3.common import math
+from articulated_ssm_both_sides.PLSR import rf_predict
+import os
 
-CORRECT_FOR_SKIN_PADDING_AND_MARKER_RADIUS = False
+
+### moved this into function instead ##
 #average skin padding for each landmark in our dataset
-SKIN_PADDING_ASIS = 10
-SKIN_PADDING_PSIS = 26
-SKIN_PADDING_LEC = 14
-SKIN_PADDING_MEC = 16
-SKIN_PADDING_LMAL = 3
-SKIN_PADDING_MMAL = 5
+#SKIN_PADDING_ASIS = 10
+#SKIN_PADDING_PSIS = 26
+#SKIN_PADDING_LEC = 14
+#SKIN_PADDING_MEC = 16
+#SKIN_PADDING_LMAL = 3
+#SKIN_PADDING_MMAL = 5
 
-MARKER_RADIUS = 0   # 7mm marker radius + 2mm marker plate
+#MARKER_RADIUS = 0   # 7mm marker radius + 2mm marker plate
 
 def normaliseVector(v):
     return v / np.linalg.norm(v)
 
-def correct_target_markers(target_markers_per_bone, side):
+
+def correct_target_markers(target_markers_per_bone, side, demographic_factors, marker_radius=9):
     """Correct the target marker location using the marker radius and skin padding
     target_markers_per_bone [dict]: Dictionary with the bones, marker_names and coordinates of each target marker per
                                     side:
@@ -27,6 +31,28 @@ def correct_target_markers(target_markers_per_bone, side):
     plot [boolean]: True = plot results, False = do not plot results
     """
 
+    MARKER_RADIUS = marker_radius
+    if demographic_factors is None:
+        SKIN_PADDING_ASIS = 10
+        SKIN_PADDING_PSIS = 26
+        SKIN_PADDING_LEC = 14
+        SKIN_PADDING_MEC = 16
+        SKIN_PADDING_LMAL = 3
+        SKIN_PADDING_MMAL = 5
+    else:
+        if side == 'left':
+            predictors = rf_predict(demographic_factors[[3, 0, 1, 2, 7]],
+                                    r'{}/rf_files/rf_model_lm_left_side.pkl'.format(os.path.dirname(__file__)))
+        else:
+            predictors = rf_predict(demographic_factors[[0, 1, 2, 4, 5, 8, 9]],
+                                    r'{}/rf_files/rf_model_lm_right_side.pkl'.format(os.path.dirname(__file__)))
+        SKIN_PADDING_ASIS = predictors[0]
+        SKIN_PADDING_PSIS = predictors[1]
+        SKIN_PADDING_LEC = predictors[2]
+        SKIN_PADDING_MEC = predictors[3]
+        SKIN_PADDING_LMAL = predictors[4]
+        SKIN_PADDING_MMAL = predictors[5]
+
     original_target_markers_per_bone = deepcopy(target_markers_per_bone)
 
     oa = (np.asarray(target_markers_per_bone['left']['ASIS']) +
@@ -35,8 +61,10 @@ def correct_target_markers(target_markers_per_bone, side):
           np.asarray(target_markers_per_bone['right']['PSIS'])) / 2
 
     # determine forward direction (x) for pelvis
-    z = normaliseVector(np.asarray(target_markers_per_bone['right']['ASIS']) - np.asarray(target_markers_per_bone['left']['ASIS']))
-    n1 = normaliseVector(np.cross(np.asarray(target_markers_per_bone['right']['ASIS']) - op, np.asarray(target_markers_per_bone['left']['ASIS']) - op))
+    z = normaliseVector(
+        np.asarray(target_markers_per_bone['right']['ASIS']) - np.asarray(target_markers_per_bone['left']['ASIS']))
+    n1 = normaliseVector(np.cross(np.asarray(target_markers_per_bone['right']['ASIS']) - op,
+                                  np.asarray(target_markers_per_bone['left']['ASIS']) - op))
     ap_axis = normaliseVector(np.cross(n1, z))
 
     if side == 'left':

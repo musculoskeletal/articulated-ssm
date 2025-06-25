@@ -97,13 +97,11 @@ class FitASM:
                 m2 = mweight_it * ((x_split[3] ** 2).sum())
                 if self.side == 'both':
                     m2 = (mweight_it * ((x_split[1] ** 2).sum()) + (mweight_it * ((x_split[2] ** 2).sum()))) / 2
-                    print(m2)
                 maha_errors.append(m2)
 
             # Calculate distance to segmentations
             if self.segm_fit:
                 rmse = self.fit_data['segmentation_handler'].average_rmse_segmentations(self.ll_model)
-                print(rmse)
                 total_error = rmse + m2
                 dist_errors.append(rmse)
 
@@ -146,19 +144,14 @@ class FitASM:
 
         # set bounds for the optimisation based on the initial guess for the pc weights
         if self.init_pc_weights is not None:
-            bounds = [(None, None)] * 11 + [
-                (val - 1, val + 1) for val in self.init_pc_weights[:len(pc_modes_it)]
+            bounds = [(None, None)] * 6 + [(-0.5, 2.5), (-0.8, 1.2), (-0.5, 0.9), (-0.2, 2.8), (-0.15, 0.15)] + [
+                (val - 0.5, val + 0.5) for val in self.init_pc_weights[:len(pc_modes_it)]
             ]
-            print(self.init_pc_weights)
-            print(bounds)
         else:
             bounds = None
-        print(x0)
-        input()
         opt_results_1 = optimize.minimize(objective_function, x0, **minimise_args, bounds=bounds)
 
         xopt1_split = _x_splitter(opt_results_1['x'])
-        print(xopt1_split)
         x_hist_it.append(xopt1_split)
 
         if self.side == 'left':
@@ -347,5 +340,4 @@ class FitASM:
                                 [0, ] * model.N_PARAMS_HIP,
                                 [0, ] * model.N_PARAMS_KNEE,
                                 init_pc_weights])
-        print(init_x)
         return init_x

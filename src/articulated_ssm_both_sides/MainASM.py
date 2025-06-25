@@ -8,7 +8,7 @@ from articulated_ssm_both_sides.FitASM_2 import FitASM
 from articulated_ssm_both_sides.LandmarkHandler import LandmarkHandler
 from articulated_ssm_both_sides.SegmentationHandler import SegmentationHandler
 from articulated_ssm_both_sides.LowerLimb import LowerLimb
-from articulated_ssm_both_sides.PLSR import rf_predict
+from articulated_ssm_both_sides.PLSR import rf_predict_PC
 
 general_fit_settings = {
     'segm_fit': False,  # Fit using segmentation data
@@ -17,7 +17,7 @@ general_fit_settings = {
     'patella_shift': np.array([50, 50, -10]),
     'pc_modes': [[0], [0, 1, 2, 3]],  # , [[0,1],[0, 1, 2, 3, 4]],    # PC modes to fit (multi fit: [[],[]])
     'mweight': [1, 0.0001],  # [1, 0.01],                    # Mahalanobis weight (multi fit: [float, float])
-    'min_args': {'method': 'Powell', 'options': {'xtol': 1e-3, 'ftol': 1e-3, 'maxiter': 100, 'disp': True}},
+    'min_args': {'method': 'Powell', 'options': {'xtol': 1e-3, 'ftol': 5e-3, 'maxiter': 50, 'disp': False}},
     # {'method': 'BFGS','jac': False,'bounds': None, 'tol': 1e-6,'options': {'eps': 1e-5}},
     'knee_gap': 5,  # Minimal gap between femur and tibia knee nodes
     'knee_fixed': False,  # Fix the knee in initial position (0)
@@ -30,7 +30,7 @@ general_fit_settings = {
 }
 
 
-def run_asm(marker_data, output_directory, demo_factors):
+def run_asm(marker_data, output_directory, demo_factors, marker_radius):
     """
     Main entry point for ASM fitting process. Takes a dictionary containing the landmark positions
     defining a single TRC frame.
@@ -45,14 +45,14 @@ def run_asm(marker_data, output_directory, demo_factors):
     lower_limb_model.ll_r.load_bones_and_model()
 
     # Load landmark coordinates data to fit to.
-    fit_data = landmark_fit(lower_limb_model, marker_data)
+    fit_data = landmark_fit(lower_limb_model, marker_data, marker_radius, demo_factors)
 
     # Produce an initial guess for the pc weights to bound the model
     # need to add verification here that all demo factors are present
-    pc_pred_l = rf_predict(demo_factors[[0, 1, 3, 4, 5, 6, 7]],
+    pc_pred_l = rf_predict_PC(demo_factors[[0, 1, 3, 4, 5, 6, 7]],
                            r'{}/rf_files/rf_model_PC_left_side.pkl'.format(os.path.dirname(__file__)),
                            lower_limb_model.ll_l.ssm_handler.coupled_pcs.weights)
-    pc_pred_r = rf_predict(demo_factors[[0, 1, 3, 4, 5, 8]],
+    pc_pred_r = rf_predict_PC(demo_factors[[0, 1, 3, 4, 5, 8]],
                            r'{}/rf_files/rf_model_PC_right_side.pkl'.format(os.path.dirname(__file__)),
                            lower_limb_model.ll_r.ssm_handler.coupled_pcs.weights)
 
@@ -62,13 +62,13 @@ def run_asm(marker_data, output_directory, demo_factors):
     write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory)
 
 
-def landmark_fit(lower_limb_model, marker_data):
+def landmark_fit(lower_limb_model, marker_data, marker_radius, demo_factors = None):
     landmark_names_to_fit = ['ASIS', 'PSIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
 
     fit_data = {}
     for side in ['left', 'right']:
         fit_data[f'landmark_handler_{side[0]}'] = LandmarkHandler(
-            marker_data, landmark_names_to_fit, lower_limb_model, general_fit_settings['correct_markers'], side
+            marker_data, landmark_names_to_fit, lower_limb_model, general_fit_settings['correct_markers'], side, marker_radius, demo_factors
         )
 
     return fit_data

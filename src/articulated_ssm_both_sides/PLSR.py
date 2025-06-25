@@ -6,7 +6,7 @@ from sklearn.cross_decomposition import PLSRegression
 import joblib
 
 
-def rf_predict(predictors, model, weights):
+def rf_predict_PC(predictors, model, weights):
     '''
     using a sklearn random forest algorithm saved as a pkl file, predict the response from the given model
     '''
@@ -17,8 +17,16 @@ def rf_predict(predictors, model, weights):
     init_pc_weights = np.zeros(len(prediction))
     for j in range(len(prediction)):
         init_pc_weights[j] = prediction[j] / np.sqrt(weights[j])
-    print(init_pc_weights)
     return init_pc_weights
+
+def rf_predict(predictors, model):
+    '''
+    using a sklearn random forest algorithm saved as a pkl file, predict the response from the given model
+    '''
+    pred = predictors.reshape(1,-1)
+    model = joblib.load(model)
+    prediction = (model.predict(pred)).squeeze()
+    return prediction
 
 def plsr(case_data, anthro_data, general_fit_settings):
     """
