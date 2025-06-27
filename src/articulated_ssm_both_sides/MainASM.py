@@ -17,7 +17,7 @@ general_fit_settings = {
     'patella_shift': np.array([50, 50, -10]),
     'pc_modes': [[0], [0, 1, 2, 3]],  # , [[0,1],[0, 1, 2, 3, 4]],    # PC modes to fit (multi fit: [[],[]])
     'mweight': [1, 0.0001],  # [1, 0.01],                    # Mahalanobis weight (multi fit: [float, float])
-    'min_args': {'method': 'Powell', 'options': {'xtol': 1e-3, 'ftol': 5e-3, 'maxiter': 50, 'disp': False}},
+    'min_args': {'method': 'Powell', 'options': {'xtol': 1e-3, 'ftol': 1e-3, 'maxiter': 50, 'disp': False}},
     # {'method': 'BFGS','jac': False,'bounds': None, 'tol': 1e-6,'options': {'eps': 1e-5}},
     'knee_gap': 5,  # Minimal gap between femur and tibia knee nodes
     'knee_fixed': False,  # Fix the knee in initial position (0)

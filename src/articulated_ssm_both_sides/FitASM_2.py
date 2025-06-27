@@ -94,7 +94,18 @@ class FitASM:
             # calc squared mahalanobis distance
             m2 = 0.0
             if self.mweight is not None:
-                m2 = mweight_it * ((x_split[3] ** 2).sum())
+                # Weighting x_split[3] – the PC weights
+                num_pcs = len(x_split[3])
+                if num_pcs == 1:
+                    x3_weights = np.array([1])  # Lightly penalize PC1
+                elif num_pcs == 4:
+                    x3_weights = np.array([0.0001, 0.001, 0.01, 0.1])
+                else:
+                    # For general N PCs: allow PC1 to vary, increasingly penalize higher ones
+                    x3_weights = np.array([0.001 * (10 ** (i / (num_pcs - 1))) for i in range(num_pcs)])
+
+                m2 = np.sum(x3_weights * (x_split[3] ** 2))
+                #m2 = mweight_it * ((x_split[3] ** 2).sum())
                 if self.side == 'both':
                     m2 = (mweight_it * ((x_split[1] ** 2).sum()) + (mweight_it * ((x_split[2] ** 2).sum()))) / 2
                 maha_errors.append(m2)
@@ -144,11 +155,11 @@ class FitASM:
 
         # set bounds for the optimisation based on the initial guess for the pc weights
         if self.init_pc_weights is not None:
-            bounds = [(None, None)] * 6 + [(-0.5, 2.5), (-0.8, 1.2), (-0.5, 0.9), (-0.2, 2.8), (-0.15, 0.15)] + [
-                (val - 0.5, val + 0.5) for val in self.init_pc_weights[:len(pc_modes_it)]
-            ]
+            bounds = [(None, None)] * 6 + [(-1.5, 2.5), (-0.8, 1.2), (-0.8, 1.2), (-0.2, 2.8), (-0.15, 0.15)] + [
+                (self.init_pc_weights[0] - 0.5, self.init_pc_weights[0] + 0.5)] + [(None, None)] * (
+                                 len(pc_modes_it) - 1)
         else:
-            bounds = None
+            [(None, None)] * 6 + [(-1.5, 2.5), (-0.8, 1.2), (-0.8, 1.2), (-0.2, 2.8), (-0.15, 0.15)] + [(None, None)] * (len(pc_modes_it))
         opt_results_1 = optimize.minimize(objective_function, x0, **minimise_args, bounds=bounds)
 
         xopt1_split = _x_splitter(opt_results_1['x'])

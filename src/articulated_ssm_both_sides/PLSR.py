@@ -17,7 +17,7 @@ def rf_predict_PC(predictors, model, weights):
     init_pc_weights = np.zeros(len(prediction))
     for j in range(len(prediction)):
         init_pc_weights[j] = prediction[j] / np.sqrt(weights[j])
-    return init_pc_weights
+    return [init_pc_weights[0],0,0,0]
 
 def rf_predict(predictors, model):
     '''
