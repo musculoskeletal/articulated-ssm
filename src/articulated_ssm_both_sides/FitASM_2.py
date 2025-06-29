@@ -155,11 +155,11 @@ class FitASM:
 
         # set bounds for the optimisation based on the initial guess for the pc weights
         if self.init_pc_weights is not None:
-            bounds = [(None, None)] * 6 + [(-1.5, 2.5), (-0.8, 1.2), (-0.8, 1.2), (-0.2, 2.8), (-0.15, 0.15)] + [
-                (self.init_pc_weights[0] - 0.5, self.init_pc_weights[0] + 0.5)] + [(None, None)] * (
+            bounds = [(None, None)] * 6 + [(-1.5, 2.5), (-1.6, 1.6), (-0.8, 2.0), (-0.2, 2.8), (-0.15, 0.15)] + [
+                (self.init_pc_weights[0] - 0.5, self.init_pc_weights[0] + 0.5)] + [(-2, 2)] * (
                                  len(pc_modes_it) - 1)
         else:
-            [(None, None)] * 6 + [(-1.5, 2.5), (-0.8, 1.2), (-0.8, 1.2), (-0.2, 2.8), (-0.15, 0.15)] + [(None, None)] * (len(pc_modes_it))
+            [(None, None)] * 6 + [(-1.5, 2.5), (-1.6, 1.6), (-0.8, 2.0), (-0.2, 2.8), (-0.15, 0.15)] + [(-3, 3)] + [(-2,2)] * (len(pc_modes_it) - 1)
         opt_results_1 = optimize.minimize(objective_function, x0, **minimise_args, bounds=bounds)
 
         xopt1_split = _x_splitter(opt_results_1['x'])
