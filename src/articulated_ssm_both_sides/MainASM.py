@@ -49,7 +49,7 @@ def run_asm(marker_data, output_directory, demo_factors, marker_radius):
 
     # Produce an initial guess for the pc weights to bound the model
     # need to add verification here that all demo factors are present
-    pc_pred_l = rf_predict_PC(demo_factors[[0, 1, 3, 4, 5, 6, 7]],
+    pc_pred_l = rf_predict_PC(demo_factors[[0, 1, 2, 3, 4, 6, 7]],
                            r'{}/rf_files/rf_model_PC_left_side.pkl'.format(os.path.dirname(__file__)),
                            lower_limb_model.ll_l.ssm_handler.coupled_pcs.weights)
     pc_pred_r = rf_predict_PC(demo_factors[[0, 1, 3, 4, 5, 8]],
