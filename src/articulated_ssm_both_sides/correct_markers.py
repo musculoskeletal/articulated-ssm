@@ -41,10 +41,10 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
         SKIN_PADDING_MMAL = 5
     else:
         if side == 'left':
-            predictors = rf_predict(demographic_factors[[3, 0, 1, 2, 7]],
+            predictors = rf_predict(demographic_factors[[0, 1, 2, 4, 6]],
                                     r'{}/rf_files/rf_model_lm_left_side.pkl'.format(os.path.dirname(__file__)))
         else:
-            predictors = rf_predict(demographic_factors[[0, 1, 2, 4, 5, 8, 9]],
+            predictors = rf_predict(demographic_factors[[0, 1, 2, 4, 8, 9]],
                                     r'{}/rf_files/rf_model_lm_right_side.pkl'.format(os.path.dirname(__file__)))
         SKIN_PADDING_ASIS = predictors[0]
         SKIN_PADDING_PSIS = predictors[1]
