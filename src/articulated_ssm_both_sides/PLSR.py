@@ -10,9 +10,8 @@ def pls_predict_PC(predictors, model, weights):
     '''
     using a sklearn random forest algorithm saved as a pkl file, predict the response from the given model
     '''
-    pred = predictors.reshape(1,-1)
     model = joblib.load(model)
-    prediction = (model.predict(pred)).squeeze()
+    prediction = (model.predict(predictors)).squeeze()
     # convert to sd not absolute weight
     init_pc_weights = np.zeros(len(prediction))
     for j in range(len(prediction)):
@@ -23,7 +22,6 @@ def rf_predict(predictors, model):
     '''
     using a sklearn random forest algorithm saved as a pkl file, predict the response from the given model
     '''
-    pred = predictors.reshape(1,-1)
     model = joblib.load(model)
-    prediction = (model.predict(pred)).squeeze()
+    prediction = (model.predict(predictors)).squeeze()
     return prediction
