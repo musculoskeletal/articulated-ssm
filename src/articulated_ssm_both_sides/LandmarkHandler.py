@@ -1,7 +1,6 @@
 import numpy as np
 import articulated_ssm_both_sides.correct_markers as cm
 
-
 landmark_map = {
     'ASI': 'ASIS',
     'PSI': 'PSIS',
@@ -13,7 +12,7 @@ landmark_map = {
 
 
 class LandmarkHandler:
-    def __init__(self, landmarks, landmark_names_to_fit, ll_model, correct_markers, side):
+    def __init__(self, landmarks, landmark_names_to_fit, ll_model, correct_markers, side, marker_radius, demo_factors):
         self.landmark_names_to_fit = landmark_names_to_fit
         self.side = side
         self.ll_model = ll_model
@@ -24,7 +23,7 @@ class LandmarkHandler:
         self.convert_landmark_names(landmarks)
         self.create_target_landmarks_dict()
         if correct_markers:
-            cm.correct_target_markers(self.target_landmarks,side)
+            cm.correct_target_markers(self.target_landmarks, side, demo_factors, marker_radius)
 
     def convert_landmark_names(self, landmarks):
         complete_map = {}

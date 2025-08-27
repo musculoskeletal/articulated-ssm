@@ -8,7 +8,7 @@ from articulated_ssm_both_sides import SaveMesh
 
 
 class FitASM:
-    def __init__(self, ll_model, general_fit_settings, fit_data, output_directory, side):
+    def __init__(self, ll_model, general_fit_settings, fit_data, output_directory, side, pc_init=None):
         self._output_directory = output_directory
         self.segm_fit = general_fit_settings['segm_fit']
         self.lm_fit = general_fit_settings['lm_fit']
@@ -17,7 +17,7 @@ class FitASM:
         self.mweight = general_fit_settings['mweight']
         self.min_args = general_fit_settings['min_args']
         self.x0 = general_fit_settings['x0']
-        self.init_pc_weights = general_fit_settings['init_pc_weights']
+        self.init_pc_weights = pc_init
         self.fit_data = fit_data
         if self.segm_fit:
             self.segmentations = fit_data['segmentation_handler'].segmentations
@@ -58,23 +58,23 @@ class FitASM:
                 hip_rot_index_R = knee_rot_index_L + self.N_PARAMS_HIP
                 knee_rot_index_R = hip_rot_index_R + self.N_PARAMS_KNEE
 
-                x_split = [x[:pel_rigid_index],                     # rigid pelvis rotation
-                           x[pel_rigid_index:pc_weight_index_L],    # pc weights left side
+                x_split = [x[:pel_rigid_index],  # rigid pelvis rotation
+                           x[pel_rigid_index:pc_weight_index_L],  # pc weights left side
                            x[pc_weight_index_L:pc_weight_index_R],  # pc weights right side
-                           x[pc_weight_index_R:hip_rot_index_L],    # hip left
-                           x[hip_rot_index_L:knee_rot_index_L],     # knee left
-                           x[knee_rot_index_L:hip_rot_index_R],     # hip right
-                           x[hip_rot_index_R:]]                     # knee right
+                           x[pc_weight_index_R:hip_rot_index_L],  # hip left
+                           x[hip_rot_index_L:knee_rot_index_L],  # knee left
+                           x[knee_rot_index_L:hip_rot_index_R],  # hip right
+                           x[hip_rot_index_R:]]  # knee right
 
             else:
                 pel_rigid_index = self.N_PARAMS_PELVIS
                 hip_rot_index = pel_rigid_index + self.N_PARAMS_HIP
                 knee_rot_index = hip_rot_index + self.N_PARAMS_KNEE
 
-                x_split = [x[:pel_rigid_index],                 # pc weights
-                           x[pel_rigid_index:hip_rot_index],    # init rigid pelvis
-                           x[hip_rot_index:knee_rot_index],     # hip left
-                           x[knee_rot_index:]]                  # knee left
+                x_split = [x[:pel_rigid_index],  # init rigid pelvis
+                           x[pel_rigid_index:hip_rot_index],  # hip
+                           x[hip_rot_index:knee_rot_index],  # knee
+                           x[knee_rot_index:]]  # pc weights
             return x_split
 
         def objective_function(x):
@@ -94,26 +94,37 @@ class FitASM:
             # calc squared mahalanobis distance
             m2 = 0.0
             if self.mweight is not None:
-                m2 = mweight_it * ((x_split[3] ** 2).sum())
+                # Weighting x_split[3] – the PC weights
+                num_pcs = len(x_split[3])
+                if num_pcs == 1:
+                    x3_weights = np.array([1])  # Lightly penalize PC1
+                elif num_pcs == 4:
+                    x3_weights = np.array([0.0001, 0.001, 0.01, 0.1])
+                else:
+                    # For general N PCs: allow PC1 to vary, increasingly penalize higher ones
+                    x3_weights = np.array([0.001 * (10 ** (i / (num_pcs - 1))) for i in range(num_pcs)])
+
+                m2 = np.sum(x3_weights * (x_split[3] ** 2))
+                #m2 = mweight_it * ((x_split[3] ** 2).sum())
                 if self.side == 'both':
                     m2 = (mweight_it * ((x_split[1] ** 2).sum()) + (mweight_it * ((x_split[2] ** 2).sum()))) / 2
-                    print(m2)
                 maha_errors.append(m2)
 
             # Calculate distance to segmentations
             if self.segm_fit:
                 rmse = self.fit_data['segmentation_handler'].average_rmse_segmentations(self.ll_model)
-                print(rmse)
                 total_error = rmse + m2
                 dist_errors.append(rmse)
 
             if self.lm_fit:
                 if self.side == 'left':
                     self.fit_data['landmark_handler_l'].update_source_landmarks_dict()
-                    target_lms_list, source_lms_list = self.fit_data['landmark_handler_l'].obtain_landmark_lists_from_dict()
+                    target_lms_list, source_lms_list = self.fit_data[
+                        'landmark_handler_l'].obtain_landmark_lists_from_dict()
                 if self.side == 'right':
                     self.fit_data['landmark_handler_r'].update_source_landmarks_dict()
-                    target_lms_list, source_lms_list = self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
+                    target_lms_list, source_lms_list = self.fit_data[
+                        'landmark_handler_r'].obtain_landmark_lists_from_dict()
                 # calc sum of squared distance between target and source landmarks
                 ssdist = ((np.asarray(target_lms_list) - np.asarray(source_lms_list)) ** 2.0).sum()  # in mm
                 # print('ssdist = {}mm'.format(ssdist))
@@ -142,7 +153,14 @@ class FitASM:
         total_errors = []
         x_input = []
 
-        opt_results_1 = optimize.minimize(objective_function, x0, **minimise_args)
+        # set bounds for the optimisation based on the initial guess for the pc weights
+        if self.init_pc_weights is not None:
+            bounds = [(None, None)] * 6 + [(-1.5, 2.5), (-1.6, 1.6), (-0.8, 2.0), (-0.2, 2.8), (-0.15, 0.15)] + [
+                (self.init_pc_weights[0] - 0.5, self.init_pc_weights[0] + 0.5)] + [(-2, 2)] * (
+                                 len(pc_modes_it) - 1)
+        else:
+            [(None, None)] * 6 + [(-1.5, 2.5), (-1.6, 1.6), (-0.8, 2.0), (-0.2, 2.8), (-0.15, 0.15)] + [(-3, 3)] + [(-2,2)] * (len(pc_modes_it) - 1)
+        opt_results_1 = optimize.minimize(objective_function, x0, **minimise_args, bounds=bounds)
 
         xopt1_split = _x_splitter(opt_results_1['x'])
         x_hist_it.append(xopt1_split)
@@ -179,7 +197,8 @@ class FitASM:
                 self.fit_data['landmark_handler_r'].update_source_landmarks_dict()
                 opt_target_lms_list, opt_source_lms_list = \
                     self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
-            SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit, self._output_directory,
+            SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit,
+                                       self._output_directory,
                                        self.side, xopt1_split)
             opt_landmark_dist = \
                 np.linalg.norm((np.asarray(opt_target_lms_list) - np.asarray(opt_source_lms_list)), axis=1)
@@ -229,15 +248,12 @@ class FitASM:
             for it in range(self.n_iterations):
                 if it > 0:
                     n_modes_diff = len(self.pc_modes[it]) - len(self.pc_modes[it - 1])
-                    if self.init_pc_weights:
-                        self.init_pc_weights = self.init_pc_weights[:(len(self.pc_modes[it]))]
+                    if self.init_pc_weights is not None:
                         init_pc_weights_extra = self.init_pc_weights[len(self.pc_modes[it - 1]):]
                     else:
                         init_pc_weights_extra = np.zeros(n_modes_diff)
-                    # if n_modes_diff > 0:
-                    x0 = np.hstack([self.x0[:total_rigid_params], np.hstack([self.x0[total_rigid_params:], init_pc_weights_extra])])
-                    # elif n_modes_diff < 0:
-                    #    x0 = np.hstack([self.x0[:len(self.pc_modes)], self.x0[-total_rigid_params:]])
+                    x0 = np.hstack([self.x0[:total_rigid_params],
+                                    np.hstack([self.x0[total_rigid_params:], init_pc_weights_extra])])
                 else:
                     x0 = self.x0
 
@@ -316,7 +332,7 @@ class FitASM:
             init_pc_weights = [0] * npcs
             # init_pc_weights = np.array(float(self.ll_model.ssm_handler.coupled_pcs.weights[:npcs]))
         else:
-            init_pc_weights = self.init_pc_weights
+            init_pc_weights = self.init_pc_weights[:npcs]
         if self.side == 'left':
             model = self.ll_model.ll_l
         elif self.side == 'right':
@@ -335,5 +351,4 @@ class FitASM:
                                 [0, ] * model.N_PARAMS_HIP,
                                 [0, ] * model.N_PARAMS_KNEE,
                                 init_pc_weights])
-
         return init_x
