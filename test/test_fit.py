@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-import numpy as np
 
 from articulated_ssm_both_sides.MainASM import run_asm
 
@@ -53,7 +52,7 @@ if __name__ == "__main__":
          70.41634690533600, 57.19884630697000]), 0)
 
 '''
-Demo factors as array (could be changed to dict):
+Demo factors as DataFrame:
 0: Age, 
 1: Height, 
 2: Mass, 
