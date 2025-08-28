@@ -17,3 +17,6 @@ dist/
 package/
 *.egg-info/
 *.egg
+
+# macOS system files
+.DS_Store
