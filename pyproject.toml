@@ -17,7 +17,7 @@ dynamic = ["dependencies"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-articulated_ssm_both_sides = ["coupled_ssm/**/*", "coupled_ssm_regions_local/**/*"]
+articulated_ssm_both_sides = ["coupled_ssm/**/*", "coupled_ssm_regions_local/**/*", "rf_files/**/*"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
