@@ -40,16 +40,22 @@ class LandmarkHandler:
                         self.target_landmarks[self.side].update({landmark_name: self.target_landmarks_original[key]})
         if self.side == 'right':
             self.target_landmarks['left']['ASIS'] = self.target_landmarks_original['left-ASIS']
-            self.target_landmarks['left']['PSIS'] = self.target_landmarks_original['left-PSIS']
         if self.side == 'left':
             self.target_landmarks['right']['ASIS'] = self.target_landmarks_original['right-ASIS']
-            self.target_landmarks['right']['PSIS'] = self.target_landmarks_original['right-PSIS']
 
-        psis_left = self.target_landmarks['left']['PSIS']
-        psis_right = self.target_landmarks['right']['PSIS']
-        self.target_landmarks['sacrum']['SAC'] = [((psis_left[0] + psis_right[0]) / 2),
-                                                  ((psis_left[1] + psis_right[1]) / 2),
-                                                  ((psis_left[2] + psis_right[2]) / 2)]
+        if 'SACR' in self.target_landmarks_original:
+            self.target_landmarks['sacrum']['SAC'] = self.target_landmarks_original['SACR']
+        else:
+            if self.side == 'right':
+                self.target_landmarks['left']['PSIS'] = self.target_landmarks_original['left-PSIS']
+            if self.side == 'left':
+                self.target_landmarks['right']['PSIS'] = self.target_landmarks_original['right-PSIS']
+
+            psis_left = self.target_landmarks['left']['PSIS']
+            psis_right = self.target_landmarks['right']['PSIS']
+            self.target_landmarks['sacrum']['SAC'] = [((psis_left[0] + psis_right[0]) / 2),
+                                                      ((psis_left[1] + psis_right[1]) / 2),
+                                                      ((psis_left[2] + psis_right[2]) / 2)]
 
     def update_source_landmarks_dict(self):
         # SSM fitted landmark coordinates
