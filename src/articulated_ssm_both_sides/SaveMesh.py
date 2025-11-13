@@ -4,7 +4,7 @@ import os
 import csv
 
 
-def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_directory, side, xopt):
+def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_directory, side, xopt, sacr):
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
@@ -30,8 +30,12 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
     condyle_lat = model.tibfib_model.landmark_coords[side]['condyle_lat']
     condyle_med = model.tibfib_model.landmark_coords[side]['condyle_med']
 
-    target_lms_save = np.copy(target_lms[:-2])
-    source_lms_save = np.copy(source_lms[:-2])
+    if sacr:
+        target_lms_save = np.copy(target_lms[:-1])
+        source_lms_save = np.copy(source_lms[:-1])
+    else:
+        target_lms_save = np.copy(target_lms[:-2])
+        source_lms_save = np.copy(source_lms[:-2])
     source_lms_save = np.concatenate((source_lms_save, np.asarray([hjc]), np.asarray([condyle_lat]), np.asarray([condyle_med])), axis=0)
     bone_mesh_pel, bone_mesh_fem, bone_mesh_tib, bone_mesh_fib = model.ssm_handler.create_mesh_each_bone(node_coords_pel, node_coords_fem, node_coords_tib, node_coords_fib)
 

@@ -17,7 +17,10 @@ class PelvisModel:
                                          ],
                                    right=['ASIS_VERTEX',
                                           'PSIS_VERTEX'
-                                          ])
+                                          ],
+                                   sacrum=['SAC'
+                                           ]
+                                   )
 
         self.bone_names = dict(left=['Pel_L', 'Pel_R'], right=['Pel_L', 'Pel_R'])
 
@@ -28,7 +31,7 @@ class PelvisModel:
         self.node_coords_pel_r = None
         # self.node_coords_sac = None
         # self.node_coords = None
-        self.landmark_coords = dict(left={}, right={})
+        self.landmark_coords = dict(left={}, right={}, sacrum={})
         self.region_coords = dict(left={}, right={})
         self.acetabulum_origin = dict(left={}, right={})
 
@@ -53,6 +56,9 @@ class PelvisModel:
         for landmark_name in self.landmark_names['right']:
             self.landmark_coords['right'].update({
                 landmark_name: self.node_coords_pel_r[self.landmark_node_nrs['right'][landmark_name]]})
+
+        self.landmark_coords['sacrum'].update(
+            {'SAC': (self.landmark_coords['left']['PSIS_VERTEX'] + self.landmark_coords['right']['PSIS_VERTEX']) / 2})
 
         self.obtain_acetabulum_sphere_centre()
 

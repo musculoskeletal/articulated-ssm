@@ -26,7 +26,6 @@ general_fit_settings = {
     'x0': None,  # Initial parameters for the 1st fit
     'init_pc_weights': None,  # Initial weights for each mode in the first fit.
     'correct_markers': True,  # if motion capture markers are used for prediction: True
-    'PLSR': False,  # if a partial least squares regression is used to provide an initial guess to shape model
 }
 
 
@@ -73,25 +72,11 @@ def landmark_fit(lower_limb_model, marker_data, marker_radius, demo_factors = No
 
     return fit_data
 
-
 def segmentation_fit(segmentations_directory):
     segmentation_handler = SegmentationHandler(segmentations_directory, general_fit_settings)
     fit_data = {'segmentation_handler': segmentation_handler}
 
     return fit_data
-
-
-def plsr_fit(anthro_data_path, case_data):
-    """
-    `case_data` should be a numpy array containing the values: 'height', ASIS width, femur length, tibia length.
-    """
-    pred_weights, pred_sd = plsr(case_data, anthro_data_path, general_fit_settings)
-    if isinstance(general_fit_settings['pc_modes'][0], (list, tuple, np.ndarray)):
-        general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes'][-1]))]
-    else:
-        general_fit_settings['init_pc_weights'] = pred_sd[:(len(general_fit_settings['pc_modes']))]
-        print(general_fit_settings['init_pc_weights'])
-
 
 def write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory):
     metrics_path = os.path.join(output_directory, "asm_fit_metrics.txt")
