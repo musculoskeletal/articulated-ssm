@@ -163,7 +163,6 @@ class FitASM:
         opt_results_1 = optimize.minimize(objective_function, x0, **minimise_args, bounds=bounds)
 
         xopt1_split = _x_splitter(opt_results_1['x'])
-        print(xopt1_split)
         x_hist_it.append(xopt1_split)
 
         if self.side == 'left':
