@@ -9,6 +9,8 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
         os.makedirs(output_directory)
 
     lms_to_fit_source = np.asarray([np.append(np.copy(lms_to_fit), 'hjc')])
+    if sacr:
+        lms_to_fit_source = np.asarray([np.append(lms_to_fit_source, 'PSIS')])
     lms_to_fit_source = np.asarray([np.append(lms_to_fit_source, 'condyle_lat')])
     lms_to_fit_source = np.asarray([np.append(lms_to_fit_source, 'condyle_med')])
 
@@ -32,11 +34,14 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
 
     if sacr:
         target_lms_save = np.copy(target_lms[:-1])
+        psis = model.pelvis_model.landmark_coords[side]['PSIS_VERTEX']
         source_lms_save = np.copy(source_lms[:-1])
+        source_lms_save = np.concatenate(
+            (source_lms_save, np.asarray([hjc]), np.asarray([psis]), np.asarray([condyle_lat]), np.asarray([condyle_med])), axis=0)
     else:
         target_lms_save = np.copy(target_lms[:-2])
         source_lms_save = np.copy(source_lms[:-2])
-    source_lms_save = np.concatenate((source_lms_save, np.asarray([hjc]), np.asarray([condyle_lat]), np.asarray([condyle_med])), axis=0)
+        source_lms_save = np.concatenate((source_lms_save, np.asarray([hjc]), np.asarray([condyle_lat]), np.asarray([condyle_med])), axis=0)
     bone_mesh_pel, bone_mesh_fem, bone_mesh_tib, bone_mesh_fib = model.ssm_handler.create_mesh_each_bone(node_coords_pel, node_coords_fem, node_coords_tib, node_coords_fib)
 
     output_pel = os.path.join(output_directory, f'predicted_mesh_{side}_pelvis.stl')
