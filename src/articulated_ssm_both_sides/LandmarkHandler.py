@@ -4,6 +4,7 @@ import articulated_ssm_both_sides.correct_markers as cm
 landmark_map = {
     'ASI': 'ASIS',
     'PSI': 'PSIS',
+    'SACR': 'SAC',
     'KNE': 'LEC',
     'KNEM': 'MEC',
     'ANK': 'malleolus_lat',
@@ -15,6 +16,7 @@ class LandmarkHandler:
     def __init__(self, landmarks, landmark_names_to_fit, ll_model, correct_markers, side, marker_radius, demo_factors):
         self.landmark_names_to_fit = landmark_names_to_fit
         self.side = side
+        self.sacr = False
         self.ll_model = ll_model
         self.target_landmarks_original = {}
         self.target_landmarks = dict(left={}, right={}, sacrum={})
@@ -22,6 +24,7 @@ class LandmarkHandler:
         self.update_source_landmarks_dict()
         self.convert_landmark_names(landmarks)
         self.create_target_landmarks_dict()
+
         if correct_markers:
             cm.correct_target_markers(self.target_landmarks, side, demo_factors, marker_radius)
 
@@ -40,16 +43,27 @@ class LandmarkHandler:
                         self.target_landmarks[self.side].update({landmark_name: self.target_landmarks_original[key]})
         if self.side == 'right':
             self.target_landmarks['left']['ASIS'] = self.target_landmarks_original['left-ASIS']
-            self.target_landmarks['left']['PSIS'] = self.target_landmarks_original['left-PSIS']
         if self.side == 'left':
             self.target_landmarks['right']['ASIS'] = self.target_landmarks_original['right-ASIS']
-            self.target_landmarks['right']['PSIS'] = self.target_landmarks_original['right-PSIS']
 
-        psis_left = self.target_landmarks['left']['PSIS']
-        psis_right = self.target_landmarks['right']['PSIS']
-        self.target_landmarks['sacrum']['SAC'] = [((psis_left[0] + psis_right[0]) / 2),
-                                                  ((psis_left[1] + psis_right[1]) / 2),
-                                                  ((psis_left[2] + psis_right[2]) / 2)]
+        if 'SACR' in self.target_landmarks_original:
+            # if sacrum mocap landmark is included
+            self.target_landmarks['sacrum']['SAC'] = self.target_landmarks_original['SACR']
+            if 'PSI' not in self.target_landmarks_original:
+                # if there are no PSIS markers in the data
+                self.sacr = True
+                self.landmark_names_to_fit = ['ASIS', 'SAC', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']
+        else:
+            if self.side == 'right':
+                self.target_landmarks['left']['PSIS'] = self.target_landmarks_original['left-PSIS']
+            if self.side == 'left':
+                self.target_landmarks['right']['PSIS'] = self.target_landmarks_original['right-PSIS']
+
+            psis_left = self.target_landmarks['left']['PSIS']
+            psis_right = self.target_landmarks['right']['PSIS']
+            self.target_landmarks['sacrum']['SAC'] = [((psis_left[0] + psis_right[0]) / 2),
+                                                      ((psis_left[1] + psis_right[1]) / 2),
+                                                      ((psis_left[2] + psis_right[2]) / 2)]
 
     def update_source_landmarks_dict(self):
         # SSM fitted landmark coordinates
@@ -106,45 +120,14 @@ class LandmarkHandler:
                             self.source_landmarks[side].update(
                                 {landmark_name: pat.landmark_coords[side][key]})
 
-        psis_left = self.source_landmarks['left']['PSIS']
-        psis_right = self.source_landmarks['right']['PSIS']
-        self.source_landmarks['sacrum']['SAC'] = [((psis_left[0] + psis_right[0]) / 2),
-                                                  ((psis_left[1] + psis_right[1]) / 2),
-                                                  ((psis_left[2] + psis_right[2]) / 2)]
-
-    def update_source_landmarks_dict_old(self):
-        # SSM fitted landmark coordinates
-        if self.side == 'left':
-            model_list = [self.ll_model.ll_l]
-        elif self.side == 'right':
-            model_list = [self.ll_model.ll_r]
+        if self.sacr:
+            self.source_landmarks['sacrum'].update({'SAC': model.pelvis_model.landmark_coords['sacrum']['SAC']})
         else:
-            model_list = [self.ll_model.ll_l, self.ll_model.ll_r]
-        for model in model_list:
-            side = model.side
-            for landmark_name in self.landmark_names_to_fit:
-                for key in model.pelvis_model.landmark_coords[side].keys():
-                    if landmark_name in key:
-                        self.source_landmarks[side].update(
-                            {landmark_name: model.pelvis_model.landmark_coords[side][key]})
-                for key in model.femur_model.landmark_coords[side].keys():
-                    if landmark_name in key:
-                        self.source_landmarks[side].update(
-                            {landmark_name: model.femur_model.landmark_coords[side][key]})
-                for key in model.tibfib_model.landmark_coords[side].keys():
-                    if landmark_name in key:
-                        self.source_landmarks[side].update(
-                            {landmark_name: model.tibfib_model.landmark_coords[side][key]})
-                if model.include_patella:
-                    for key in model.patella_model.landmark_coords[side].keys():
-                        if landmark_name in key:
-                            self.source_landmarks[side].update(
-                                {landmark_name: model.patella_model.landmark_coords[side][key]})
-        psis_left = self.source_landmarks['left']['PSIS']
-        psis_right = self.source_landmarks['right']['PSIS']
-        self.source_landmarks['sacrum']['SAC'] = [((psis_left[0] + psis_right[0]) / 2),
-                                                  ((psis_left[1] + psis_right[1]) / 2),
-                                                  ((psis_left[2] + psis_right[2]) / 2)]
+            psis_left = self.source_landmarks['left']['PSIS']
+            psis_right = self.source_landmarks['right']['PSIS']
+            self.source_landmarks['sacrum']['SAC'] = [((psis_left[0] + psis_right[0]) / 2),
+                                                      ((psis_left[1] + psis_right[1]) / 2),
+                                                      ((psis_left[2] + psis_right[2]) / 2)]
 
     def obtain_landmark_lists_from_dict(self):
         target_lms_list = []
@@ -164,12 +147,14 @@ class LandmarkHandler:
                 source_lms_list.append(self.source_landmarks[self.side][landmark_name])
             if self.side == 'left':
                 target_lms_list.append(self.target_landmarks['right']['ASIS'])
-                target_lms_list.append(self.target_landmarks['right']['PSIS'])
                 source_lms_list.append(self.source_landmarks['right']['ASIS'])
-                source_lms_list.append(self.source_landmarks['right']['PSIS'])
+                if not self.sacr:
+                    target_lms_list.append(self.target_landmarks['right']['PSIS'])
+                    source_lms_list.append(self.source_landmarks['right']['PSIS'])
             elif self.side == 'right':
                 target_lms_list.append(self.target_landmarks['left']['ASIS'])
-                target_lms_list.append(self.target_landmarks['left']['PSIS'])
                 source_lms_list.append(self.source_landmarks['left']['ASIS'])
-                source_lms_list.append(self.source_landmarks['left']['PSIS'])
+                if not self.sacr:
+                    target_lms_list.append(self.target_landmarks['left']['PSIS'])
+                    source_lms_list.append(self.source_landmarks['left']['PSIS'])
         return target_lms_list, source_lms_list

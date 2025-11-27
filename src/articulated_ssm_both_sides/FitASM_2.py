@@ -199,7 +199,7 @@ class FitASM:
                     self.fit_data['landmark_handler_r'].obtain_landmark_lists_from_dict()
             SaveMesh.save_mesh_and_lms(self.ll_model, opt_source_lms_list, opt_target_lms_list, self.lm_to_fit,
                                        self._output_directory,
-                                       self.side, xopt1_split)
+                                       self.side, xopt1_split, self.fit_data['landmark_handler_l'].sacr)
             opt_landmark_dist = \
                 np.linalg.norm((np.asarray(opt_target_lms_list) - np.asarray(opt_source_lms_list)), axis=1)
             opt_ssdist = (opt_landmark_dist ** 2).sum()
@@ -304,20 +304,28 @@ class FitASM:
                                                                   rotcentre=ll_model_side.pelvis_model.acs.o)
 
         elif self.lm_fit:
-            _target = np.array([self.target_landmarks['left']['ASIS'],
-                                self.target_landmarks['left']['PSIS'],
-                                self.target_landmarks['right']['ASIS'],
-                                self.target_landmarks['right']['PSIS'],
-                                self.target_landmarks['sacrum']['SAC']])
-            _source = np.array([self.source_landmarks['left']['ASIS'],
-                                self.source_landmarks['left']['PSIS'],
-                                self.source_landmarks['right']['ASIS'],
-                                self.source_landmarks['right']['PSIS'],
-                                self.source_landmarks['sacrum']['SAC']])
+            if self.fit_data['landmark_handler_l'].sacr:
+                _target = np.array([self.target_landmarks['left']['ASIS'],
+                                    self.target_landmarks['right']['ASIS'],
+                                    self.target_landmarks['sacrum']['SAC']])
+                _source = np.array([self.source_landmarks['left']['ASIS'],
+                                    self.source_landmarks['right']['ASIS'],
+                                    self.source_landmarks['sacrum']['SAC']])
+            else:
+                _target = np.array([self.target_landmarks['left']['ASIS'],
+                                    self.target_landmarks['right']['ASIS'],
+                                    self.target_landmarks['left']['PSIS'],
+                                    self.target_landmarks['right']['PSIS'],
+                                    self.target_landmarks['sacrum']['SAC']])
+                _source = np.array([self.source_landmarks['left']['ASIS'],
+                                    self.source_landmarks['right']['ASIS'],
+                                    self.source_landmarks['left']['PSIS'],
+                                    self.source_landmarks['right']['PSIS'],
+                                    self.source_landmarks['sacrum']['SAC']])
 
             rx, ry, rz = [0, 0, 0]
             t0 = np.hstack([_target.mean(0) - _source.mean(0), [rx, ry, rz], ])
-            rot_centre = 0.5 * (_source[0] + _source[2])
+            rot_centre = 0.5 * (_source[0] + _source[1])
             init_rigid, fitted_landmarks, fit_errors = alignment_fitting.fitRigid(_source,
                                                                                   _target,
                                                                                   t0=t0,

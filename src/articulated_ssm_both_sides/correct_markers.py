@@ -57,8 +57,7 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
 
     oa = (np.asarray(target_markers_per_bone['left']['ASIS']) +
           np.asarray(target_markers_per_bone['right']['ASIS'])) / 2
-    op = (np.asarray(target_markers_per_bone['left']['PSIS']) +
-          np.asarray(target_markers_per_bone['right']['PSIS'])) / 2
+    op = target_markers_per_bone['sacrum']['SAC']
 
     # determine forward direction (x) for pelvis
     z = normaliseVector(

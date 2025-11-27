@@ -6,7 +6,7 @@ __pycache__/
 code_single_side_hemi/
 
 # Test outputs
-test/_output
+/test
 
 # Project files
 .idea/
@@ -20,3 +20,4 @@ package/
 
 # macOS system files
 .DS_Store
+test/test_fit.py
