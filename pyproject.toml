@@ -10,7 +10,7 @@ name = "articulated-ssm"
 description = "Python code for articulated statistical shape model generation."
 authors = [{name = "Laura Carman", email = "laura.carman@auckland.ac.nz" },
            {name = "Timothy Salemink", email = "tim.nicolas@outlook.com" }]
-version = "0.1.7"
+version = "0.1.8"
 dynamic = ["dependencies"]
 
 [tool.setuptools]
