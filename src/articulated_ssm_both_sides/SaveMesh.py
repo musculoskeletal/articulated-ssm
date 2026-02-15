@@ -49,7 +49,7 @@ def save_mesh_and_lms(ll_model, source_lms, target_lms, lms_to_fit, output_direc
     output_tib = os.path.join(output_directory, f'predicted_mesh_{side}_tibia.stl')
     output_fib = os.path.join(output_directory, f'predicted_mesh_{side}_fibula.stl')
     pred_lms = os.path.join(output_directory, f'predicted_lms_{side}.txt')
-    orig_lms = os.path.join(output_directory, f'orignial_lms_{side}.txt')
+    orig_lms = os.path.join(output_directory, f'original_lms_{side}.txt')
     x_opt = os.path.join(output_directory, f'x_opt_{side}.txt')
 
     pred_lms_save = np.concatenate((np.transpose(lms_to_fit_source), source_lms_save), axis=1)
