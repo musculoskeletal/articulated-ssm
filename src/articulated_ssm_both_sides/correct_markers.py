@@ -83,9 +83,7 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
                         target_markers_per_bone[side][lm_name] + \
                         ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_LMAL)
                 else:
-                    print(lm_name)
-                    print('Error in skin padding and marker radius correction')
-                    input()
+                    raise ValueError(f"Unexpected landmark '{lm_name}' in skin/bone marker projection.")
 
     elif side == 'right':
         ml_axis_fem = sign * math.norm(np.asarray(target_markers_per_bone['right']['LEC']) -
@@ -119,4 +117,4 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
                         target_markers_per_bone[side][lm_name] - \
                         ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_LMAL)
                 else:
-                    print('Error in skin padding and marker radius correction')
+                    raise ValueError(f"Unexpected landmark '{lm_name}' in skin/bone marker projection.")
