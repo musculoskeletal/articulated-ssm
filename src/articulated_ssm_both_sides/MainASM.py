@@ -9,6 +9,7 @@ from articulated_ssm_both_sides.LandmarkHandler import LandmarkHandler
 from articulated_ssm_both_sides.SegmentationHandler import SegmentationHandler
 from articulated_ssm_both_sides.LowerLimb import LowerLimb
 from articulated_ssm_both_sides.PLSR import pls_predict_PC
+from articulated_ssm_both_sides.correct_markers import correct_target_markers
 
 general_fit_settings = {
     'segm_fit': False,  # Fit using segmentation data
@@ -59,6 +60,31 @@ def run_asm(marker_data, output_directory, demo_factors, marker_radius):
     asm_fitter_r = FitASM(lower_limb_model, general_fit_settings, fit_data, output_directory, 'right', pc_pred_r)
 
     write_fit_metrics(asm_fitter_l, asm_fitter_r, output_directory)
+    write_model_landmarks(output_directory, demo_factors, marker_radius)
+
+
+def write_model_landmarks(output_directory, demo_factors, marker_radius):
+    """
+    Projects the predicted bone-surface landmarks outwards to the skin-surface marker positions and writes them to
+    model_lms_<side>.txt.
+    """
+    predicted = {}
+    for side in ['left', 'right']:
+        with open(os.path.join(output_directory, f'predicted_lms_{side}.txt')) as file:
+            predicted[side] = {parts[0]: np.array(parts[1:], dtype=float) for parts in map(str.split, file) if parts}
+
+    sacrum = (predicted['left']['SAC'] + predicted['right']['SAC']) / 2
+    for side, other_side in [('left', 'right'), ('right', 'left')]:
+        landmarks = {
+            side: {name: predicted[side][name] for name in ['ASIS', 'PSIS', 'LEC', 'MEC', 'malleolus_med', 'malleolus_lat']},
+            other_side: {'ASIS': predicted[other_side]['ASIS']},
+            'sacrum': {'SAC': sacrum},
+        }
+        correct_target_markers(landmarks, side, demo_factors, marker_radius, outward=True)
+
+        with open(os.path.join(output_directory, f'model_lms_{side}.txt'), 'w') as file:
+            for name, xyz in {**landmarks[side], **landmarks['sacrum']}.items():
+                file.write(f"{name} {' '.join(map(str, xyz))}\n")
 
 
 def landmark_fit(lower_limb_model, marker_data, marker_radius, demo_factors = None):
