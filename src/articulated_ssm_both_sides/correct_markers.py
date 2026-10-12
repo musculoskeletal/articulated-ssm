@@ -51,70 +51,35 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
                                   np.asarray(target_markers_per_bone['left']['ASIS']) - op))
     ap_axis = sign * normaliseVector(np.cross(n1, z))
 
-    if side == 'left':
-        ml_axis_fem = sign * math.norm(np.asarray(target_markers_per_bone['left']['MEC']) -
-                                np.asarray(target_markers_per_bone['left']['LEC']))
-        ml_axis_tib = sign * math.norm(np.asarray(target_markers_per_bone['left']['malleolus_med']) -
-                                np.asarray(target_markers_per_bone['left']['malleolus_lat']))
-        for side in target_markers_per_bone.keys():
-            for lm_name in target_markers_per_bone[side].keys():
-                if 'ASIS' in lm_name:  # Move marker location posteriorly
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] - \
-                        ap_axis * (MARKER_RADIUS + SKIN_PADDING_ASIS)
-                elif 'PSIS' in lm_name or lm_name == 'SAC':  # Move marker location anteriorly
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] + \
-                        ap_axis * (MARKER_RADIUS + SKIN_PADDING_PSIS)
-                elif lm_name == 'MEC':  # Move marker location laterally
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] - \
-                        ml_axis_fem * (MARKER_RADIUS + SKIN_PADDING_MEC)
-                elif lm_name == 'LEC':  # Move marker location medially
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] + \
-                        ml_axis_fem * (MARKER_RADIUS + SKIN_PADDING_LEC)
-                elif lm_name == 'malleolus_med':  # Move marker location laterally
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] - \
-                        ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_MMAL)
-                elif lm_name == 'malleolus_lat':  # Move marker location medially
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] + \
-                        ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_LMAL)
-                else:
-                    raise ValueError(f"Unexpected landmark '{lm_name}' in skin/bone marker projection.")
-
-    elif side == 'right':
-        ml_axis_fem = sign * math.norm(np.asarray(target_markers_per_bone['right']['LEC']) -
-                                np.asarray(target_markers_per_bone['right']['MEC']))
-        ml_axis_tib = sign * math.norm(np.asarray(target_markers_per_bone['right']['malleolus_lat']) -
-                                np.asarray(target_markers_per_bone['right']['malleolus_med']))
-        for side in target_markers_per_bone.keys():
-            for lm_name in target_markers_per_bone[side]:
-                if 'ASIS' in lm_name:  # Move marker location posteriorly
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] - \
-                        ap_axis * (MARKER_RADIUS + SKIN_PADDING_ASIS)
-                elif 'PSIS' in lm_name or lm_name == 'SAC':  # Move marker location anteriorly
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] + \
-                        ap_axis * (MARKER_RADIUS + SKIN_PADDING_PSIS)
-                elif lm_name == 'MEC':  # Move marker location laterally
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] + \
-                        ml_axis_fem * (MARKER_RADIUS + SKIN_PADDING_MEC)
-                elif lm_name == 'LEC':  # Move marker location medially
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] - \
-                        ml_axis_fem * (MARKER_RADIUS + SKIN_PADDING_LEC)
-                elif lm_name == 'malleolus_med':  # Move marker location laterally
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] + \
-                        ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_MMAL)
-                elif lm_name == 'malleolus_lat':  # Move marker location medially
-                    target_markers_per_bone[side][lm_name] = \
-                        target_markers_per_bone[side][lm_name] - \
-                        ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_LMAL)
-                else:
-                    raise ValueError(f"Unexpected landmark '{lm_name}' in skin/bone marker projection.")
+    ml_axis_fem = sign * math.norm(np.asarray(target_markers_per_bone[side]['MEC']) -
+                                   np.asarray(target_markers_per_bone[side]['LEC']))
+    ml_axis_tib = sign * math.norm(np.asarray(target_markers_per_bone[side]['malleolus_med']) -
+                                   np.asarray(target_markers_per_bone[side]['malleolus_lat']))
+    for side in target_markers_per_bone.keys():
+        for lm_name in target_markers_per_bone[side].keys():
+            if 'ASIS' in lm_name:  # Move marker location posteriorly
+                target_markers_per_bone[side][lm_name] = \
+                    target_markers_per_bone[side][lm_name] - \
+                    ap_axis * (MARKER_RADIUS + SKIN_PADDING_ASIS)
+            elif 'PSIS' in lm_name or lm_name == 'SAC':  # Move marker location anteriorly
+                target_markers_per_bone[side][lm_name] = \
+                    target_markers_per_bone[side][lm_name] + \
+                    ap_axis * (MARKER_RADIUS + SKIN_PADDING_PSIS)
+            elif lm_name == 'MEC':  # Move marker location laterally
+                target_markers_per_bone[side][lm_name] = \
+                    target_markers_per_bone[side][lm_name] - \
+                    ml_axis_fem * (MARKER_RADIUS + SKIN_PADDING_MEC)
+            elif lm_name == 'LEC':  # Move marker location medially
+                target_markers_per_bone[side][lm_name] = \
+                    target_markers_per_bone[side][lm_name] + \
+                    ml_axis_fem * (MARKER_RADIUS + SKIN_PADDING_LEC)
+            elif lm_name == 'malleolus_med':  # Move marker location laterally
+                target_markers_per_bone[side][lm_name] = \
+                    target_markers_per_bone[side][lm_name] - \
+                    ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_MMAL)
+            elif lm_name == 'malleolus_lat':  # Move marker location medially
+                target_markers_per_bone[side][lm_name] = \
+                    target_markers_per_bone[side][lm_name] + \
+                    ml_axis_tib * (MARKER_RADIUS + SKIN_PADDING_LMAL)
+            else:
+                raise ValueError(f"Unexpected landmark '{lm_name}' in skin/bone marker projection.")
