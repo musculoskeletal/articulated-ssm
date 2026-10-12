@@ -1,20 +1,8 @@
 import numpy as np
-from copy import deepcopy
 from gias3.common import math
 from articulated_ssm_both_sides.PLSR import rf_predict
 import os
 
-
-### moved this into function instead ##
-#average skin padding for each landmark in our dataset
-#SKIN_PADDING_ASIS = 10
-#SKIN_PADDING_PSIS = 26
-#SKIN_PADDING_LEC = 14
-#SKIN_PADDING_MEC = 16
-#SKIN_PADDING_LMAL = 3
-#SKIN_PADDING_MMAL = 5
-
-#MARKER_RADIUS = 0   # 7mm marker radius + 2mm marker plate
 
 def normaliseVector(v):
     return v / np.linalg.norm(v)
@@ -28,7 +16,6 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
                                                                                markername2: xyz},
                                                                       'right': {markername1: xyz,
                                                                                 markername2: xyz}}}
-    plot [boolean]: True = plot results, False = do not plot results
     outward [boolean]: True = project bone landmarks outwards to marker positions, False = project markers inwards
     """
 
@@ -55,10 +42,6 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
         SKIN_PADDING_LMAL = predictors[4]
         SKIN_PADDING_MMAL = predictors[5]
 
-    original_target_markers_per_bone = deepcopy(target_markers_per_bone)
-
-    oa = (np.asarray(target_markers_per_bone['left']['ASIS']) +
-          np.asarray(target_markers_per_bone['right']['ASIS'])) / 2
     op = target_markers_per_bone['sacrum']['SAC']
 
     # determine forward direction (x) for pelvis
