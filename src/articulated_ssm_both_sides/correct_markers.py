@@ -20,7 +20,7 @@ def normaliseVector(v):
     return v / np.linalg.norm(v)
 
 
-def correct_target_markers(target_markers_per_bone, side, demographic_factors, marker_radius=9):
+def correct_target_markers(target_markers_per_bone, side, demographic_factors, marker_radius=9, outward=False):
     """Correct the target marker location using the marker radius and skin padding
     target_markers_per_bone [dict]: Dictionary with the bones, marker_names and coordinates of each target marker per
                                     side:
@@ -29,8 +29,10 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
                                                                       'right': {markername1: xyz,
                                                                                 markername2: xyz}}}
     plot [boolean]: True = plot results, False = do not plot results
+    outward [boolean]: True = project bone landmarks outwards to marker positions, False = project markers inwards
     """
 
+    sign = -1 if outward else 1
     MARKER_RADIUS = marker_radius
     if demographic_factors is None:
         SKIN_PADDING_ASIS = 10
@@ -64,12 +66,12 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
         np.asarray(target_markers_per_bone['right']['ASIS']) - np.asarray(target_markers_per_bone['left']['ASIS']))
     n1 = normaliseVector(np.cross(np.asarray(target_markers_per_bone['right']['ASIS']) - op,
                                   np.asarray(target_markers_per_bone['left']['ASIS']) - op))
-    ap_axis = normaliseVector(np.cross(n1, z))
+    ap_axis = sign * normaliseVector(np.cross(n1, z))
 
     if side == 'left':
-        ml_axis_fem = math.norm(np.asarray(target_markers_per_bone['left']['MEC']) -
+        ml_axis_fem = sign * math.norm(np.asarray(target_markers_per_bone['left']['MEC']) -
                                 np.asarray(target_markers_per_bone['left']['LEC']))
-        ml_axis_tib = math.norm(np.asarray(target_markers_per_bone['left']['malleolus_med']) -
+        ml_axis_tib = sign * math.norm(np.asarray(target_markers_per_bone['left']['malleolus_med']) -
                                 np.asarray(target_markers_per_bone['left']['malleolus_lat']))
         for side in target_markers_per_bone.keys():
             for lm_name in target_markers_per_bone[side].keys():
@@ -103,9 +105,9 @@ def correct_target_markers(target_markers_per_bone, side, demographic_factors, m
                     input()
 
     elif side == 'right':
-        ml_axis_fem = math.norm(np.asarray(target_markers_per_bone['right']['LEC']) -
+        ml_axis_fem = sign * math.norm(np.asarray(target_markers_per_bone['right']['LEC']) -
                                 np.asarray(target_markers_per_bone['right']['MEC']))
-        ml_axis_tib = math.norm(np.asarray(target_markers_per_bone['right']['malleolus_lat']) -
+        ml_axis_tib = sign * math.norm(np.asarray(target_markers_per_bone['right']['malleolus_lat']) -
                                 np.asarray(target_markers_per_bone['right']['malleolus_med']))
         for side in target_markers_per_bone.keys():
             for lm_name in target_markers_per_bone[side]:
