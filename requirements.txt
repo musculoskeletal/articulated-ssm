@@ -1,6 +1,7 @@
 numpy
 scipy
 pandas
+joblib
 
 scikit-learn==1.6.1
 
